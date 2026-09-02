@@ -10,7 +10,6 @@ import Foundation
 import Cocoa
 import os
 import Yams
-import EonilFSEvents
 
 var bookmarksFile = "Bookmarks.dict"
 var bookmarks = [URL: Data]()

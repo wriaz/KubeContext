@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		8A5DB217259535A1004F6EED /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = 8A5DB216259535A1004F6EED /* Yams */; };
 		8A5DB21D259535D3004F6EED /* SwiftyStoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8A5DB21C259535D3004F6EED /* SwiftyStoreKit */; };
-		8A795B772595240E003EA721 /* EonilFSEvents in Frameworks */ = {isa = PBXBuildFile; productRef = 8A795B762595240E003EA721 /* EonilFSEvents */; };
 		8AEB3AA02D50021F00E4DC93 /* KubeContextLoadTeleportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEB3A9F2D50021F00E4DC93 /* KubeContextLoadTeleportTests.swift */; };
 		A1EF413726E3C811004BA0C2 /* KubeContextLoadMiniKubeContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EF413626E3C811004BA0C2 /* KubeContextLoadMiniKubeContextTests.swift */; };
 		E422CCAD216E8D0A0008D173 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = E422CCAC216E8D0A0008D173 /* Config.swift */; };
@@ -89,7 +88,6 @@
 			files = (
 				8A5DB21D259535D3004F6EED /* SwiftyStoreKit in Frameworks */,
 				8A5DB217259535A1004F6EED /* Yams in Frameworks */,
-				8A795B772595240E003EA721 /* EonilFSEvents in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,7 +207,6 @@
 			);
 			name = KubeContext;
 			packageProductDependencies = (
-				8A795B762595240E003EA721 /* EonilFSEvents */,
 				8A5DB216259535A1004F6EED /* Yams */,
 				8A5DB21C259535D3004F6EED /* SwiftyStoreKit */,
 			);
@@ -275,7 +272,6 @@
 			);
 			mainGroup = E4DE5AD72166AAD800B6959B;
 			packageReferences = (
-				8A795B752595240E003EA721 /* XCRemoteSwiftPackageReference "FSEvents" */,
 				8A5DB215259535A1004F6EED /* XCRemoteSwiftPackageReference "Yams" */,
 				8A5DB21B259535D3004F6EED /* XCRemoteSwiftPackageReference "SwiftyStoreKit" */,
 			);
@@ -675,14 +671,6 @@
 				minimumVersion = 0.16.1;
 			};
 		};
-		8A795B752595240E003EA721 /* XCRemoteSwiftPackageReference "FSEvents" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/eonil/FSEvents.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.7;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -695,11 +683,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8A5DB21B259535D3004F6EED /* XCRemoteSwiftPackageReference "SwiftyStoreKit" */;
 			productName = SwiftyStoreKit;
-		};
-		8A795B762595240E003EA721 /* EonilFSEvents */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8A795B752595240E003EA721 /* XCRemoteSwiftPackageReference "FSEvents" */;
-			productName = EonilFSEvents;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

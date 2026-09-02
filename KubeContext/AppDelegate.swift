@@ -8,7 +8,6 @@
 
 import Cocoa
 import Yams
-import EonilFSEvents
 import SwiftyStoreKit
 
 @NSApplicationMain

@@ -9,10 +9,25 @@
 import Foundation
 import Yams
 import os
-import EonilFSEvents
+import CoreServices
 import Cocoa
 
-let contextChangedCallback: (EonilFSEventsEvent) -> () = {_ in
+private let contextChangedCallback: FSEventStreamCallback = { _, clientCallBackInfo, _, _, _, _ in
+    guard let clientCallBackInfo = clientCallBackInfo else {
+        return
+    }
+    let kubernetes = Unmanaged<Kubernetes>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
+    kubernetes.contextChanged()
+}
+
+private let contextReleaseCallback: FSEventStreamContextReleaseCallBack = { clientCallBackInfo in
+    guard let clientCallBackInfo = clientCallBackInfo else {
+        return
+    }
+    Unmanaged<Kubernetes>.fromOpaque(clientCallBackInfo).release()
+}
+
+private func updateContextStatusBar() {
     statusBarButton.imagePosition = NSControl.ImagePosition.imageLeft
     if k8s.kubeconfig != nil {
         do {
@@ -21,10 +36,6 @@ let contextChangedCallback: (EonilFSEventsEvent) -> () = {_ in
             NSLog("Error occured while trying to set statusBarButton in contextChangedCallback %@", error as NSError) 
         }
     }
-    //print("event: ", e)
-    //button.imageHugsTitle = false
-    //button.contentTintColor = NSColor.red
-    //button.action = #selector(constructMenu(_:))
 }
 
 func showContextName() throws {
@@ -48,7 +59,7 @@ class Kubernetes {
     var kubeconfig:URL?
     var shouldShowContextName:Bool
     var iconColor: NSColor?
-    var watcher: EonilFSEventStream!
+    var watcher: FSEventStream?
 
     init() {
         shouldShowContextName = UserDefaults.standard.bool(forKey: keyShowContextOnMenu)
@@ -88,21 +99,44 @@ class Kubernetes {
     }
     
     func initWatcher(){
-        if watcher != nil {
-            watcher.stop()
-            watcher.invalidate()
+        if let watcher = watcher {
+            FSEventStreamStop(watcher)
+            FSEventStreamInvalidate(watcher)
+            self.watcher = nil
         }
-        do {
-            watcher = try EonilFSEventStream(pathsToWatch: [(kubeconfig?.path)!],
-                                             sinceWhen: .now,
-                                             latency: 0,
-                                             flags: [.noDefer, .fileEvents],
-                                             handler: contextChangedCallback)
-            watcher!.setDispatchQueue(DispatchQueue.main)
-            try watcher!.start()
-        } catch {
-            NSLog("Error while starting watcher: %s", error as NSError)
+
+        guard let kubeconfigPath = kubeconfig?.path else {
+            return
         }
+        let pathsToWatch = [kubeconfigPath] as CFArray
+        var context = FSEventStreamContext(version: 0,
+                                           info: Unmanaged.passRetained(self).toOpaque(),
+                                           retain: nil,
+                                           release: contextReleaseCallback,
+                                           copyDescription: nil)
+        guard let watcher = FSEventStreamCreate(nil,
+                                                contextChangedCallback,
+                                                &context,
+                                                pathsToWatch,
+                                                FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+                                                0,
+                                                FSEventStreamCreateFlags(kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagFileEvents)) else {
+            Unmanaged<Kubernetes>.fromOpaque(context.info!).release()
+            NSLog("Error while creating watcher")
+            return
+        }
+
+        FSEventStreamSetDispatchQueue(watcher, DispatchQueue.main)
+        guard FSEventStreamStart(watcher) else {
+            FSEventStreamInvalidate(watcher)
+            NSLog("Error while starting watcher")
+            return
+        }
+        self.watcher = watcher
+    }
+
+    func contextChanged() {
+        updateContextStatusBar()
     }
     
     func backupKubeconfig() {
