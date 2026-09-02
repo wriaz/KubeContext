@@ -20,7 +20,7 @@ private let contextChangedCallback: FSEventStreamCallback = { _, clientCallBackI
     kubernetes.contextChanged()
 }
 
-private let contextReleaseCallback: @convention(c) (UnsafeMutableRawPointer?) -> Void = { clientCallBackInfo in
+private let contextReleaseCallback: @convention(c) (UnsafeRawPointer?) -> Void = { clientCallBackInfo in
     guard let clientCallBackInfo = clientCallBackInfo else {
         return
     }
