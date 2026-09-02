@@ -15,21 +15,23 @@ class KubeContextLoadSingleContextTests: XCTestCase {
     var k8s: Kubernetes?
     var bundle: Bundle!
     var url: URL!
+    var tempDataUrl: URL!
 
     override func setUp() {
         bundle = Bundle(for: type(of: self))
-        var tempDataUrl: URL?
         do {
-            let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
-            tempDataUrl = documentDirectory.appendingPathComponent("TempData")
-            try fileManager.removeItem(at: tempDataUrl!)
-            let testDataPath = bundle.resourcePath! + "/TestData"
-            try fileManager.copyItem(atPath: testDataPath, toPath: tempDataUrl!.path)
+            tempDataUrl = fileManager.temporaryDirectory.appendingPathComponent("KubeContextTests-\(UUID().uuidString)", isDirectory: true)
+            try fileManager.createDirectory(at: tempDataUrl, withIntermediateDirectories: true)
+            guard let fixtureUrl = bundle.url(forResource: "config-with-one-context", withExtension: "yaml", subdirectory: "TestData") else {
+                XCTFail("Could not locate config-with-one-context.yaml in TestData")
+                return
+            }
+            url = tempDataUrl.appendingPathComponent("config-with-one-context.yaml")
+            try fileManager.copyItem(at: fixtureUrl, to: url)
         } catch {
             XCTFail()
         }
-        
-        url = tempDataUrl!.appendingPathComponent("config-with-one-context.yaml")
+
         k8s = Kubernetes()
         XCTAssertNoThrow(try k8s?.setKubeconfig(configFile: url))
         XCTAssertNotNil(k8s)
@@ -37,7 +39,8 @@ class KubeContextLoadSingleContextTests: XCTestCase {
     }
 
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        k8s = nil
+        try? fileManager.removeItem(at: tempDataUrl)
     }
     
     func testKubernetesLoadConfig() {
@@ -105,21 +108,23 @@ class KubeContextLoadTwoContextTests: XCTestCase {
     var k8s: Kubernetes?
     var bundle: Bundle!
     var url: URL!
+    var tempDataUrl: URL!
     
     override func setUp() {
         bundle = Bundle(for: type(of: self))
-        var tempDataUrl: URL?
         do {
-            let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
-            tempDataUrl = documentDirectory.appendingPathComponent("TempData")
-            try fileManager.removeItem(at: tempDataUrl!)
-            let testDataPath = bundle.resourcePath! + "/TestData"
-            try fileManager.copyItem(atPath: testDataPath, toPath: tempDataUrl!.path)
+            tempDataUrl = fileManager.temporaryDirectory.appendingPathComponent("KubeContextTests-\(UUID().uuidString)", isDirectory: true)
+            try fileManager.createDirectory(at: tempDataUrl, withIntermediateDirectories: true)
+            guard let fixtureUrl = bundle.url(forResource: "config-with-two-contexts", withExtension: "yaml", subdirectory: "TestData") else {
+                XCTFail("Could not locate config-with-two-contexts.yaml in TestData")
+                return
+            }
+            url = tempDataUrl.appendingPathComponent("config-with-two-contexts.yaml")
+            try fileManager.copyItem(at: fixtureUrl, to: url)
         } catch {
             XCTFail()
         }
-        
-        url = tempDataUrl!.appendingPathComponent("config-with-two-contexts.yaml")
+
         k8s = Kubernetes()
         XCTAssertNoThrow(try k8s?.setKubeconfig(configFile: url))
         XCTAssertNotNil(k8s)
@@ -127,7 +132,8 @@ class KubeContextLoadTwoContextTests: XCTestCase {
     }
     
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        k8s = nil
+        try? fileManager.removeItem(at: tempDataUrl)
     }
     
     func testKubernetesLoadConfig() {
@@ -171,21 +177,23 @@ class KubeContextLoadConfigWithNullTests: XCTestCase {
     var k8s: Kubernetes?
     var bundle: Bundle!
     var url: URL!
+    var tempDataUrl: URL!
     
     override func setUp() {
         bundle = Bundle(for: type(of: self))
-        var tempDataUrl: URL?
         do {
-            let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
-            tempDataUrl = documentDirectory.appendingPathComponent("TempData")
-            try fileManager.removeItem(at: tempDataUrl!)
-            let testDataPath = bundle.resourcePath! + "/TestData"
-            try fileManager.copyItem(atPath: testDataPath, toPath: tempDataUrl!.path)
+            tempDataUrl = fileManager.temporaryDirectory.appendingPathComponent("KubeContextTests-\(UUID().uuidString)", isDirectory: true)
+            try fileManager.createDirectory(at: tempDataUrl, withIntermediateDirectories: true)
+            guard let fixtureUrl = bundle.url(forResource: "config-with-null", withExtension: "yaml", subdirectory: "TestData") else {
+                XCTFail("Could not locate config-with-null.yaml in TestData")
+                return
+            }
+            url = tempDataUrl.appendingPathComponent("config-with-null.yaml")
+            try fileManager.copyItem(at: fixtureUrl, to: url)
         } catch {
             XCTFail()
         }
-        
-        url = tempDataUrl!.appendingPathComponent("config-with-null.yaml")
+
         k8s = Kubernetes()
         XCTAssertNoThrow(try k8s?.setKubeconfig(configFile: url))
         XCTAssertNotNil(k8s)
@@ -193,7 +201,8 @@ class KubeContextLoadConfigWithNullTests: XCTestCase {
     }
     
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        k8s = nil
+        try? fileManager.removeItem(at: tempDataUrl)
     }
     
     func testKubernetesLoadConfig() {
