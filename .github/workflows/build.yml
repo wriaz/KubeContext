@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inspect Xcode project
+        run: |
+          xcodebuild -list -project KubeContext.xcodeproj | tee "$RUNNER_TEMP/xcode-list.txt"
+          grep -Eq '^    KubeContext$' "$RUNNER_TEMP/xcode-list.txt"
+          echo "SCHEME=KubeContext" >> "$GITHUB_ENV"
+          xcodebuild -showBuildSettings -project KubeContext.xcodeproj -target KubeContext -configuration Debug | grep -E 'CONFIGURATION|MACOSX_DEPLOYMENT_TARGET|SWIFT_VERSION'
+
+      - name: Test
+        run: >-
+          xcodebuild
+          -project KubeContext.xcodeproj
+          -scheme "$SCHEME"
+          -configuration Debug
+          -destination 'platform=macOS'
+          -derivedDataPath "$RUNNER_TEMP/DerivedData"
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+          test
+
+      - name: Build unsigned app
+        run: >-
+          xcodebuild
+          -project KubeContext.xcodeproj
+          -scheme "$SCHEME"
+          -configuration Debug
+          -destination 'platform=macOS'
+          -derivedDataPath "$RUNNER_TEMP/DerivedData"
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+          build
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: KubeContext-${{ github.sha }}
+          path: ${{ runner.temp }}/DerivedData/Build/Products/Debug/KubeContext.app
+          if-no-files-found: error

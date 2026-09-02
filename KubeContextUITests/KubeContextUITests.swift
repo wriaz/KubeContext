@@ -72,6 +72,27 @@ class KubeContextUITests: XCTestCase {
         
         print("ok")
     }
+
+    func testSearchContexts() {
+        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        statusItem.click()
+        app.menuBars.menuItems["Manage Contexts"].click()
+
+        let contextManagementWindow = app.windows["Context Management"]
+        let searchField = contextManagementWindow.searchFields["management-search"]
+        XCTAssertTrue(searchField.exists)
+
+        searchField.click()
+        searchField.typeText("MINIKUBE")
+
+        XCTAssertTrue(contextManagementWindow.tables.staticTexts["minikube"].exists)
+        XCTAssertFalse(contextManagementWindow.tables.staticTexts["prod-cluster"].exists)
+
+        searchField.clearText()
+
+        XCTAssertTrue(contextManagementWindow.tables.staticTexts["minikube"].exists)
+        XCTAssertTrue(contextManagementWindow.tables.staticTexts["prod-cluster"].exists)
+    }
     
     func testRenameContext() {
         // Use recording to get started writing UI tests.

@@ -267,6 +267,16 @@
                                     <action selector="importRestoreClicked:" target="TZX-CG-v7T" id="Z1E-3W-mJf"/>
                                 </connections>
                             </button>
+                            <searchField identifier="management-search" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M3S-earch-001">
+                                <rect key="frame" x="20" y="354" width="120" height="22"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <searchFieldCell key="cell" scrollable="YES" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" placeholderString="Search Contexts" id="M3S-earch-002">
+                                    <font key="font" metaFont="system"/>
+                                </searchFieldCell>
+                                <connections>
+                                    <action selector="searchFieldAction:" target="TZX-CG-v7T" id="M3S-earch-003"/>
+                                </connections>
+                            </searchField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8fa-cj-RLX">
                                 <rect key="frame" x="147" y="358" width="373" height="22"/>
                                 <autoresizingMask key="autoresizingMask"/>
@@ -350,6 +360,7 @@
                         <outlet property="namespaceTextField" destination="rbn-y7-NIm" id="rO6-ur-bas"/>
                         <outlet property="revertButton" destination="67x-yX-WO6" id="6nq-5A-N2d"/>
                         <outlet property="serverLabel" destination="Yki-C0-FkN" id="qmK-rS-j4Z"/>
+                        <outlet property="searchField" destination="M3S-earch-001" id="M3S-earch-004"/>
                         <outlet property="setIconColorCheckbox" destination="abS-I0-f3P" id="EWL-ix-HSW"/>
                         <outlet property="showContextCheckbox" destination="Az8-pH-Pfq" id="k00-l9-doS"/>
                         <outlet property="tableView" destination="Gtf-rj-yDQ" id="QeO-I2-Mtb"/>

@@ -12,6 +12,7 @@ import SwiftyStoreKit
 class ManageViewController: NSViewController, NSWindowDelegate {
     let fileManager = FileManager.default
     var contexts: [ContextElement]?
+    var contextIndices = [Int]()
     var activeRowIndex = 0
     var config: Config!
     var importButtonAction="import"
@@ -34,6 +35,7 @@ class ManageViewController: NSViewController, NSWindowDelegate {
     
     @IBOutlet weak var contextLockButton: NSButton!
     @IBOutlet weak var iconColorLockButton: NSButton!
+    @IBOutlet weak var searchField: NSSearchField!
     
     @IBOutlet weak var bottomSegmentedControl: NSSegmentedControl!
     
@@ -52,6 +54,7 @@ class ManageViewController: NSViewController, NSWindowDelegate {
         self.preferredContentSize = NSMakeSize(self.view.frame.size.width, self.view.frame.size.height)
         nameTextField.delegate = self
         namespaceTextField.delegate = self
+        searchField.sendsSearchStringImmediately = true
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -151,7 +154,11 @@ class ManageViewController: NSViewController, NSWindowDelegate {
     func refreshTable() {
         loadConfig()
         tableView.reloadData()
-        tableView.selectRowIndexes(NSIndexSet(index: activeRowIndex) as IndexSet, byExtendingSelection: false)
+        if let displayIndex = contextIndices.firstIndex(of: activeRowIndex) {
+            tableView.selectRowIndexes(NSIndexSet(index: displayIndex) as IndexSet, byExtendingSelection: false)
+        } else {
+            tableView.deselectAll(self)
+        }
     }
     
     func fetchConfig() {
@@ -176,7 +183,7 @@ class ManageViewController: NSViewController, NSWindowDelegate {
             NSLog("Could not get contexts from config")
             return
         }
-        contexts = ctxs
+        updateFilteredContexts(from: ctxs)
         
         guard let clusters = config?.Clusters else {
             NSLog("Could not get clusters from config")
@@ -197,13 +204,38 @@ class ManageViewController: NSViewController, NSWindowDelegate {
     }
     
     @objc func tableViewClick(_ sender:AnyObject) {
-        // 1
-        activeRowIndex = tableView.selectedRow
+        let selectedRow = tableView.selectedRow
+        guard selectedRow >= 0 && selectedRow < contextIndices.count else {
+            return
+        }
+        activeRowIndex = contextIndices[selectedRow]
         loadActiveContext()
+    }
+
+    @IBAction func searchFieldAction(_ sender: NSSearchField) {
+        updateFilteredContexts(from: config?.Contexts ?? [])
+        tableView.reloadData()
+        if let displayIndex = contextIndices.firstIndex(of: activeRowIndex) {
+            tableView.selectRowIndexes(NSIndexSet(index: displayIndex) as IndexSet, byExtendingSelection: false)
+        } else {
+            tableView.deselectAll(self)
+        }
+    }
+
+    func matchingContexts(searchText: String, in contexts: [ContextElement]) -> ([ContextElement], [Int]) {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let matches = contexts.enumerated().filter { query.isEmpty || $0.element.Name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
+        return (matches.map { $0.element }, matches.map { $0.offset })
+    }
+
+    private func updateFilteredContexts(from allContexts: [ContextElement]) {
+        let result = matchingContexts(searchText: searchField?.stringValue ?? "", in: allContexts)
+        contexts = result.0
+        contextIndices = result.1
     }
     
     func loadActiveContext() {
-        guard let nofContexts = contexts?.count else {
+        guard let nofContexts = config?.Contexts.count else {
             NSLog("Could not get nof contexts")
             return
         }
@@ -215,7 +247,7 @@ class ManageViewController: NSViewController, NSWindowDelegate {
         if activeRowIndex < 0 || activeRowIndex > (nofContexts - 1) {
             activeRowIndex = 0
         }
-        guard let item = contexts?[activeRowIndex] else {
+        guard let item = config?.Contexts[activeRowIndex] else {
             NSLog("Could not get context item to load")
             return
         }
@@ -482,7 +514,7 @@ class ManageViewController: NSViewController, NSWindowDelegate {
     }
     
     func removeCurrentContext() {
-        guard let nofContexts = contexts?.count else {
+        guard let nofContexts = config?.Contexts.count else {
             NSLog("Could not get nof contexts")
             return
         }
@@ -735,7 +767,7 @@ extension ManageViewController: NSTableViewDataSource {
     
     func numberOfRows(in tableView: NSTableView) -> Int {
         if let cnt = contexts?.count {
-            if cnt < maxNofContexts {
+            if (config?.Contexts.count ?? cnt) < maxNofContexts {
                 bottomSegmentedControl.setImage(NSImage(named: NSImage.addTemplateName), forSegment: 0)
                 bottomSegmentedControl.setImage(NSImage(imageLiteralResourceName: "duplicate"), forSegment: 2)
             } else {
@@ -763,53 +795,59 @@ extension ManageViewController: NSTableViewDataSource {
     }
     
     func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
-        
-        var oldIndexes = [Int]()
+        var oldDisplayIndexes = [Int]()
         info.enumerateDraggingItems(options: [], for: tableView, classes: [NSPasteboardItem.self], searchOptions: [:]) { dragItem, _, _ in
-            if let str = (dragItem.item as! NSPasteboardItem).string(forType: self.dragDropType), let index = Int(str) {
-                oldIndexes.append(index)
+            if let pasteboardItem = dragItem.item as? NSPasteboardItem,
+               let str = pasteboardItem.string(forType: self.dragDropType),
+               let index = Int(str) {
+                oldDisplayIndexes.append(index)
             }
         }
-        
-        var oldIndexOffset = 0
-        var newIndexOffset = 0
-        
-        // For simplicity, the code below uses `tableView.moveRowAtIndex` to move rows around directly.
-        // You may want to move rows in your content array and then call `tableView.reloadData()` instead.
-        tableView.beginUpdates()
-        for oldIndex in oldIndexes {
-            if oldIndex < row {
-                let fromIndex = oldIndex + oldIndexOffset
-                let toIndex = row - 1
-                
-                tableView.moveRow(at: fromIndex, to: toIndex)
-                let c = config?.Contexts.remove(at: fromIndex)
-                config?.Contexts.insert(c!, at: toIndex)
-                oldIndexOffset -= 1
-                if activeRowIndex == fromIndex {
-                    activeRowIndex = toIndex
-                } else if row > activeRowIndex && oldIndex < activeRowIndex {
-                    activeRowIndex = activeRowIndex - 1
-                }
+        let movingDisplayIndexes = Array(Set(oldDisplayIndexes.filter { $0 >= 0 && $0 < contextIndices.count })).sorted()
+        guard !movingDisplayIndexes.isEmpty, var allContexts = config?.Contexts else {
+            return false
+        }
+
+        let movingOriginalIndexes = movingDisplayIndexes.map { contextIndices[$0] }
+        let movingOriginalIndexSet = Set(movingOriginalIndexes)
+        let remainingVisibleIndexes = contextIndices.enumerated().filter { !movingDisplayIndexes.contains($0.offset) }
+        let insertionDisplayRow = min(max(row, 0), contextIndices.count)
+        let insertionBoundary: Int
+        if let nextVisibleIndex = remainingVisibleIndexes.first(where: { $0.offset >= insertionDisplayRow }) {
+            insertionBoundary = nextVisibleIndex.element
+        } else if let lastVisibleIndex = remainingVisibleIndexes.last {
+            insertionBoundary = lastVisibleIndex.element + 1
+        } else {
+            insertionBoundary = allContexts.count
+        }
+
+        let movedContexts = movingOriginalIndexes.sorted().map { allContexts[$0] }
+        for originalIndex in movingOriginalIndexes.sorted(by: >) {
+            allContexts.remove(at: originalIndex)
+        }
+
+        var toIndex = insertionBoundary - movingOriginalIndexes.filter { $0 < insertionBoundary }.count
+        toIndex = min(max(toIndex, 0), allContexts.count)
+        allContexts.insert(contentsOf: movedContexts, at: toIndex)
+        config!.Contexts = allContexts
+
+        if movingOriginalIndexSet.contains(activeRowIndex), let movingOffset = movingOriginalIndexes.sorted().firstIndex(of: activeRowIndex) {
+            activeRowIndex = toIndex + movingOffset
+        } else {
+            let removedBeforeActive = movingOriginalIndexes.filter { $0 < activeRowIndex }.count
+            let activeIndexAfterRemoval = activeRowIndex - removedBeforeActive
+            if toIndex <= activeIndexAfterRemoval {
+                activeRowIndex = activeIndexAfterRemoval + movedContexts.count
             } else {
-                let fromIndex = oldIndex
-                let toIndex = row + newIndexOffset
-                
-                tableView.moveRow(at: fromIndex, to: toIndex)
-                let c = config?.Contexts.remove(at: fromIndex)
-                config?.Contexts.insert(c!, at: toIndex)
-                newIndexOffset += 1
-                
-                if activeRowIndex == fromIndex {
-                    activeRowIndex = toIndex
-                } else if row <= activeRowIndex &&  oldIndex > activeRowIndex {
-                    activeRowIndex = activeRowIndex + 1
-                }
+                activeRowIndex = activeIndexAfterRemoval
             }
         }
-        tableView.selectRowIndexes(NSIndexSet(index: activeRowIndex) as IndexSet, byExtendingSelection: false)
+
         loadConfig()
-        tableView.endUpdates()
+        tableView.reloadData()
+        if let displayIndex = contextIndices.firstIndex(of: activeRowIndex) {
+            tableView.selectRowIndexes(NSIndexSet(index: displayIndex) as IndexSet, byExtendingSelection: false)
+        }
         applyButton.isEnabled = true
         revertButton.isEnabled = true
         return true
@@ -821,7 +859,8 @@ extension ManageViewController: NSTableViewDelegate {
         var text: String = ""
         
         // 1
-        guard let item = contexts?[row] else {
+        guard row >= 0 && row < contextIndices.count,
+              let item = config?.Contexts[contextIndices[row]] else {
             return nil
         }
         

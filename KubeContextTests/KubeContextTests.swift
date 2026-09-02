@@ -214,3 +214,20 @@ class KubeContextLoadConfigWithNullTests: XCTestCase {
         XCTAssertEqual(config?.AuthInfos.count, 2, "There are two users")
     }
 }
+
+class ManageViewControllerSearchTests: XCTestCase {
+    func testMatchingContextsIsCaseInsensitiveAndPreservesOriginalIndices() {
+        let contexts = [
+            ContextElement(Context: Context(Cluster: "first", Extensions: nil, Namespace: nil, AuthInfo: "first-user"), Name: "production", IconColor: nil),
+            ContextElement(Context: Context(Cluster: "second", Extensions: nil, Namespace: nil, AuthInfo: "second-user"), Name: "Minikube", IconColor: nil),
+            ContextElement(Context: Context(Cluster: "third", Extensions: nil, Namespace: nil, AuthInfo: "third-user"), Name: "development", IconColor: nil)
+        ]
+        let controller = ManageViewController()
+
+        let filtered = controller.matchingContexts(searchText: "KUBE", in: contexts)
+
+        XCTAssertEqual(filtered.0.map { $0.Name }, ["Minikube"])
+        XCTAssertEqual(filtered.1, [1])
+        XCTAssertEqual(controller.matchingContexts(searchText: "", in: contexts).1, [0, 1, 2])
+    }
+}
