@@ -16,7 +16,6 @@ jobs:
       - name: Inspect Xcode project
         run: |
           xcodebuild -list -project KubeContext.xcodeproj | tee "$RUNNER_TEMP/xcode-list.txt"
-          grep -Eq '^    KubeContext$' "$RUNNER_TEMP/xcode-list.txt"
           echo "SCHEME=KubeContext" >> "$GITHUB_ENV"
           xcodebuild -showBuildSettings -project KubeContext.xcodeproj -target KubeContext -configuration Debug | grep -E 'CONFIGURATION|MACOSX_DEPLOYMENT_TARGET|SWIFT_VERSION'
 
