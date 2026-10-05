@@ -24,20 +24,24 @@ class KubeContextUITests: XCTestCase {
         app.launchArguments.append("--uitesting")
         
         app.launch()
+        app.activate()
         
 
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
+        XCTAssertTrue(statusItem.waitForExistence(timeout: 10), "KubeContext status item did not become available")
         statusItem.click()
         
         let menuBarsQuery = app.menuBars
-        menuBarsQuery.menuItems["Select kubeconfig file"].click()
+        let selectKubeconfigMenuItem = menuBarsQuery.menuItems["Select kubeconfig file"]
+        XCTAssertTrue(selectKubeconfigMenuItem.waitForExistence(timeout: 10), "KubeContext status-bar menu did not become available")
+        selectKubeconfigMenuItem.click()
         // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
         
     }
 
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let menuBarsQuery = app.menuBars
@@ -58,7 +62,7 @@ class KubeContextUITests: XCTestCase {
 
     func testChangeContext() {
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let menuBarsQuery = app.menuBars
@@ -74,7 +78,7 @@ class KubeContextUITests: XCTestCase {
     }
 
     func testSearchContexts() {
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         app.menuBars.menuItems["Manage Contexts"].click()
 
@@ -98,7 +102,7 @@ class KubeContextUITests: XCTestCase {
         // Use recording to get started writing UI tests.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         
         statusItem.click()
         let menuBarsQuery = app.menuBars
@@ -148,7 +152,7 @@ class KubeContextUITests: XCTestCase {
     func testChangeContextDetails() {
         let app = XCUIApplication()
         
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
@@ -197,7 +201,7 @@ class KubeContextUITests: XCTestCase {
     func testRevertChanges() {
         
         let app = XCUIApplication()
-        app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0).click()
+        app.statusItems.element.click()
         app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
         
         let contextManagementWindow = app.windows["Context Management"]
@@ -221,7 +225,7 @@ class KubeContextUITests: XCTestCase {
         let xcuiClosewindowButton = contextManagementWindow.buttons[XCUIIdentifierCloseWindow]
         xcuiClosewindowButton.click()
         
-        app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0).click()
+        app.statusItems.element.click()
         app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
         contextManagementWindow/*@START_MENU_TOKEN@*/.tables.staticTexts["temp-cluster"]/*[[".scrollViews.tables",".tableRows",".cells.staticTexts[\"temp-cluster\"]",".staticTexts[\"temp-cluster\"]",".tables"],[[[-1,4,1],[-1,0,1]],[[-1,3],[-1,2],[-1,1,2]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
         
@@ -245,7 +249,7 @@ class KubeContextUITests: XCTestCase {
         print("ok")
         
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
@@ -287,7 +291,7 @@ class KubeContextUITests: XCTestCase {
         print("ok")
         
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
@@ -311,7 +315,7 @@ class KubeContextUITests: XCTestCase {
         print("ok")
         
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let menuBarsQuery = app.menuBars
@@ -358,7 +362,7 @@ class KubeContextUITests: XCTestCase {
         print("ok")
         
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
@@ -400,7 +404,7 @@ class KubeContextUITests: XCTestCase {
         print("ok")
         
         let app = XCUIApplication()
-        let statusItem = app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0)
+        let statusItem = app.statusItems.element
         statusItem.click()
         
         let menuBarsQuery = app.menuBars
@@ -461,7 +465,7 @@ class KubeContextUITests: XCTestCase {
         print("ok")
         
         let app = XCUIApplication()
-        app.children(matching: .menuBar).element(boundBy: 1).children(matching: .statusItem).element(boundBy: 0).click()
+        app.statusItems.element.click()
         
         app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
         
