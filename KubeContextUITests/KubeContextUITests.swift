@@ -31,7 +31,7 @@ class KubeContextUITests: XCTestCase {
         XCTAssertTrue(statusItem.waitForExistence(timeout: 10), "KubeContext status item did not become available")
         statusItem.click()
         
-        let menuBarsQuery = app.menuBars
+        let menuBarsQuery = statusItem.menus
         let selectKubeconfigMenuItem = menuBarsQuery.menuItems["Select kubeconfig file"]
         XCTAssertTrue(selectKubeconfigMenuItem.waitForExistence(timeout: 10), "KubeContext status-bar menu did not become available")
         selectKubeconfigMenuItem.click()
@@ -44,7 +44,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let menuBarsQuery = app.menuBars
+        let menuBarsQuery = statusItem.menus
         let manageContextsMenuItem = menuBarsQuery/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
         manageContextsMenuItem.click()
         let contextManagementWindow = app.windows["Context Management"]
@@ -65,12 +65,12 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let menuBarsQuery = app.menuBars
-        let currentContextMenusQuery = menuBarsQuery/*@START_MENU_TOKEN@*/.menus.containing(.menuItem, identifier:"Current Context")/*[[".statusItems",".menus.containing(.menuItem, identifier:\"Quit\")",".menus.containing(.menuItem, identifier:\"Manage Contexts\")",".menus.containing(.menuItem, identifier:\"Import Kubeconfig File\")",".menus.containing(.menuItem, identifier:\"Switch Context\")",".menus.containing(.menuItem, identifier:\"Current Context\")"],[[[-1,5],[-1,4],[-1,3],[-1,2],[-1,1],[-1,0,1]],[[-1,5],[-1,4],[-1,3],[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
+        let menuBarsQuery = statusItem.menus
+        let currentContextMenusQuery = menuBarsQuery.containing(.menuItem, identifier: "Current Context")
         currentContextMenusQuery.children(matching: .menuItem)["docker-for-desktop"].click()
         statusItem.click()
         menuBarsQuery.menuItems["Switch Context"].click()
-        menuBarsQuery.menus.menuItems["minikube"].click()
+        menuBarsQuery.menuItems["Switch Context"].menus.menuItems["minikube"].click()
         statusItem.click()
         currentContextMenusQuery.children(matching: .menuItem)["minikube"].click()
         
@@ -80,7 +80,7 @@ class KubeContextUITests: XCTestCase {
     func testSearchContexts() {
         let statusItem = app.statusItems.element
         statusItem.click()
-        app.menuBars.menuItems["Manage Contexts"].click()
+        statusItem.menus.menuItems["Manage Contexts"].click()
 
         let contextManagementWindow = app.windows["Context Management"]
         let searchField = contextManagementWindow.searchFields["management-search"]
@@ -105,8 +105,8 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         
         statusItem.click()
-        let menuBarsQuery = app.menuBars
-        let manageContextsMenuItem = menuBarsQuery/*@START_MENU_TOKEN@*/.menus.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[1]]@END_MENU_TOKEN@*/
+        let menuBarsQuery = statusItem.menus
+        let manageContextsMenuItem = menuBarsQuery.menuItems["Manage Contexts"]
         manageContextsMenuItem.click()
 
         
@@ -122,7 +122,7 @@ class KubeContextUITests: XCTestCase {
         let xcuiClosewindowButton = contextManagementWindow.buttons[XCUIIdentifierCloseWindow]
         xcuiClosewindowButton.click()
         statusItem.click()
-        let currentContextMenusQuery = menuBarsQuery.menus.containing(.menuItem, identifier:"Current Context")
+        let currentContextMenusQuery = menuBarsQuery.containing(.menuItem, identifier: "Current Context")
         currentContextMenusQuery.children(matching: .menuItem)["docker-of-kubernetes"].click()
         statusItem.click()
         manageContextsMenuItem.click()
@@ -134,7 +134,7 @@ class KubeContextUITests: XCTestCase {
         xcuiClosewindowButton.click()
         statusItem.click()
         menuBarsQuery.menuItems["Switch Context"].click()
-        menuBarsQuery.menuItems["my-kube"].click()
+        menuBarsQuery.menuItems["Switch Context"].menus.menuItems["my-kube"].click()
         
         statusItem.click()
         manageContextsMenuItem.click()
@@ -155,7 +155,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
+        let manageContextsMenuItem = statusItem.menus.menuItems["Manage Contexts"]
         manageContextsMenuItem.click()
         
         let contextManagementWindow = app.windows["Context Management"]
@@ -202,7 +202,7 @@ class KubeContextUITests: XCTestCase {
         
         let app = XCUIApplication()
         app.statusItems.element.click()
-        app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
+        app.statusItems.element.menus.menuItems["Manage Contexts"].click()
         
         let contextManagementWindow = app.windows["Context Management"]
         contextManagementWindow/*@START_MENU_TOKEN@*/.tables.staticTexts["temp-cluster"]/*[[".scrollViews.tables",".tableRows",".cells.staticTexts[\"temp-cluster\"]",".staticTexts[\"temp-cluster\"]",".tables"],[[[-1,4,1],[-1,0,1]],[[-1,3],[-1,2],[-1,1,2]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
@@ -226,7 +226,7 @@ class KubeContextUITests: XCTestCase {
         xcuiClosewindowButton.click()
         
         app.statusItems.element.click()
-        app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
+        app.statusItems.element.menus.menuItems["Manage Contexts"].click()
         contextManagementWindow/*@START_MENU_TOKEN@*/.tables.staticTexts["temp-cluster"]/*[[".scrollViews.tables",".tableRows",".cells.staticTexts[\"temp-cluster\"]",".staticTexts[\"temp-cluster\"]",".tables"],[[[-1,4,1],[-1,0,1]],[[-1,3],[-1,2],[-1,1,2]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
         
         let ns_textfieldname = app.textFields["management-name"]
@@ -252,7 +252,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
+        let manageContextsMenuItem = statusItem.menus.menuItems["Manage Contexts"]
         manageContextsMenuItem.click()
         
         let contextManagementWindow = app.windows["Context Management"]
@@ -294,7 +294,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
+        let manageContextsMenuItem = statusItem.menus.menuItems["Manage Contexts"]
         manageContextsMenuItem.click()
         
         let contextManagementWindow = app.windows["Context Management"]
@@ -318,7 +318,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let menuBarsQuery = app.menuBars
+        let menuBarsQuery = statusItem.menus
         menuBarsQuery/*@START_MENU_TOKEN@*/.menuItems["Import Kubeconfig File"]/*[[".statusItems",".menus.menuItems[\"Import Kubeconfig File\"]",".menuItems[\"Import Kubeconfig File\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
         statusItem.click()
         
@@ -365,7 +365,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let manageContextsMenuItem = app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
+        let manageContextsMenuItem = statusItem.menus.menuItems["Manage Contexts"]
         manageContextsMenuItem.click()
         
         let contextManagementWindow = app.windows["Context Management"]
@@ -407,7 +407,7 @@ class KubeContextUITests: XCTestCase {
         let statusItem = app.statusItems.element
         statusItem.click()
         
-        let menuBarsQuery = app.menuBars
+        let menuBarsQuery = statusItem.menus
         let manageContextsMenuItem = menuBarsQuery/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
         manageContextsMenuItem.click()
         
@@ -467,7 +467,7 @@ class KubeContextUITests: XCTestCase {
         let app = XCUIApplication()
         app.statusItems.element.click()
         
-        app.menuBars/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
+        app.statusItems.element.menus.menuItems["Manage Contexts"].click()
         
         let contextManagementWindow = app.windows["Context Management"]
         let changeButton = contextManagementWindow.buttons["Change"]
