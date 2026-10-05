@@ -31,6 +31,14 @@ jobs:
           CODE_SIGNING_REQUIRED=NO
           test
 
+      - name: Upload XCTest result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: XCTest-results-${{ github.sha }}
+          path: ${{ runner.temp }}/DerivedData/Logs/Test/*.xcresult
+          if-no-files-found: warn
+
       - name: Build unsigned app
         run: >-
           xcodebuild
