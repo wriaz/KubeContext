@@ -97,7 +97,6 @@ class KubeContextUITests: XCTestCase {
         let manageContextsMenuItem = menuBarsQuery/*@START_MENU_TOKEN@*/.menuItems["Manage Contexts"]/*[[".statusItems",".menus.menuItems[\"Manage Contexts\"]",".menuItems[\"Manage Contexts\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
         manageContextsMenuItem.click()
         let contextManagementWindow = app.windows["Context Management"]
-        let xcuiClosewindowButton = contextManagementWindow.buttons[XCUIIdentifierCloseWindow]
         XCUIElement.perform(withKeyModifiers: .option) {
             contextManagementWindow.buttons["Restore Original"].click()
         }
@@ -501,7 +500,6 @@ class KubeContextUITests: XCTestCase {
         statusItem.click()
         menuBarsQuery.menuItems["Manage Contexts"].click()
 
-        let contextManagementWindow = app.windows["Context Management"]
         assertContexts(in: contextManagementWindow.tables.staticTexts, matchFixtureNamed: "ui-test-config")
     }
     
