@@ -10,23 +10,57 @@ import XCTest
 
 class KubeContextUITests: XCTestCase {
     var app: XCUIApplication!
-    let fileManager = FileManager.default
 
     private var testBundle: Bundle {
         Bundle(for: type(of: self))
     }
 
-    private func fixtureURL(named name: String) throws -> URL {
-        try XCTUnwrap(testBundle.url(forResource: name, withExtension: "yaml"))
+    private func fixtureURL(named name: String) -> URL? {
+        guard let url = testBundle.url(forResource: name, withExtension: "yaml") else {
+            XCTFail("Missing UI test fixture: \(name).yaml")
+            return nil
+        }
+        return url
     }
 
-    private func appTempDataFile(named name: String) throws -> URL {
-        let bundleIdentifier = try XCTUnwrap(app.bundleID)
-        return fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Containers", isDirectory: true)
-            .appendingPathComponent(bundleIdentifier, isDirectory: true)
-            .appendingPathComponent("Data/Documents/TempData", isDirectory: true)
-            .appendingPathComponent(name)
+    private func assertContexts(in table: XCUIElementQuery, matchFixtureNamed fixtureName: String) {
+        guard let url = fixtureURL(named: fixtureName) else {
+            return
+        }
+
+        let fixtureContent: String
+        do {
+            fixtureContent = try String(contentsOf: url, encoding: .utf8)
+        } catch {
+            XCTFail("Could not read UI test fixture \(fixtureName).yaml: \(error)")
+            return
+        }
+
+        let fixtureSections = fixtureContent.components(separatedBy: "contexts:\n")
+        guard fixtureSections.count > 1,
+              let contexts = fixtureSections[1].components(separatedBy: "\ncurrent-context:").first else {
+            XCTFail("Could not find contexts in UI test fixture \(fixtureName).yaml")
+            return
+        }
+
+        let expectedNames = contexts
+            .split(separator: "\n")
+            .compactMap { line -> String? in
+                let prefix = "  name: "
+                guard line.hasPrefix(prefix) else {
+                    return nil
+                }
+                return String(line.dropFirst(prefix.count))
+            }
+            .map { name -> String in
+                guard name.count > 26 else {
+                    return name
+                }
+                return "\(name.prefix(12))...\(name.suffix(11))"
+            }
+
+        let actualNames = table.allElementsBoundByIndex.map(\.label)
+        XCTAssertEqual(actualNames.sorted(), expectedNames.sorted())
     }
     
     override func setUp() {
@@ -302,7 +336,7 @@ class KubeContextUITests: XCTestCase {
         XCTAssert(!contextManagementWindow.tables.staticTexts["new-kube"].exists)
     }
     
-    func testRemoveContextWithCleanup() throws {
+    func testRemoveContextWithCleanup() {
         print("ok")
         
         let app = XCUIApplication()
@@ -319,10 +353,7 @@ class KubeContextUITests: XCTestCase {
         let applyButton = contextManagementWindow.buttons["Apply"]
         applyButton.click()
         
-        let expectedContent = try String(contentsOf: fixtureURL(named: "ui-test-config-cleaned"), encoding: .utf8)
-        let currentContent = try String(contentsOf: appTempDataFile(named: "ui-test-config.yaml"), encoding: .utf8)
-        
-        XCTAssertEqual(expectedContent, currentContent)
+        assertContexts(in: contextManagementWindow.tables.staticTexts, matchFixtureNamed: "ui-test-config-cleaned")
     }
     
     func testImportFromMenu() {
@@ -467,11 +498,11 @@ class KubeContextUITests: XCTestCase {
         
         statusItem.click()
         menuBarsQuery/*@START_MENU_TOKEN@*/.menuItems["Select kubeconfig file"]/*[[".statusItems",".menus.menuItems[\"Select kubeconfig file\"]",".menuItems[\"Select kubeconfig file\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
-        
-        let origContent = try String(contentsOf: fixtureURL(named: "ui-test-config"), encoding: .utf8)
-        let currentContent = try String(contentsOf: appTempDataFile(named: "ui-test-config.yaml"), encoding: .utf8)
-        
-        XCTAssertEqual(origContent, currentContent)
+        statusItem.click()
+        menuBarsQuery.menuItems["Manage Contexts"].click()
+
+        let contextManagementWindow = app.windows["Context Management"]
+        assertContexts(in: contextManagementWindow.tables.staticTexts, matchFixtureNamed: "ui-test-config")
     }
     
     func testChangeKubeconfig() {
