@@ -594,9 +594,15 @@ class ManageViewController: NSViewController, NSWindowDelegate {
     
     func restoreOriginal() {
         do {
-            let kubeconfigFileUrl = loadBookmarks()
-            let origConfigURL = getOrigKubeconfigFileUrl()
-            let _ = try fileManager.replaceItemAt(kubeconfigFileUrl!, withItemAt: origConfigURL!, backupItemName: "kubeconfig.kubecontext")
+            guard let kubeconfigFileUrl = uiTesting ? testFileAsConfig : loadBookmarks() else {
+                NSLog("Error: Could not restore to original kubeconfig file: no restore target available")
+                return
+            }
+            guard let origConfigURL = getOrigKubeconfigFileUrl() else {
+                NSLog("Error: Could not restore to original kubeconfig file: no original kubeconfig available")
+                return
+            }
+            let _ = try fileManager.replaceItemAt(kubeconfigFileUrl, withItemAt: origConfigURL, backupItemName: "kubeconfig.kubecontext")
             k8s.kubeconfig = nil
             let alert = NSAlert()
             alert.icon = NSImage.init(named: NSImage.cautionName)

@@ -94,8 +94,10 @@ class Kubernetes {
             initWatcher()
         }
         backupKubeconfig()
-        storeFolderInBookmark(url: configFile!)
-        saveBookmarksData()
+        if !uiTesting || configFile != testFileAsConfig {
+            storeFolderInBookmark(url: configFile!)
+            saveBookmarksData()
+        }
     }
     
     func initWatcher(){

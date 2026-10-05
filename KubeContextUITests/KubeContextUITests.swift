@@ -59,8 +59,10 @@ class KubeContextUITests: XCTestCase {
                 return "\(name.prefix(12))...\(name.suffix(11))"
             }
 
-        let actualNames = table.allElementsBoundByIndex.map(\.label)
-        XCTAssertEqual(actualNames.sorted(), expectedNames.sorted())
+        XCTAssertEqual(table.count, expectedNames.count)
+        for name in expectedNames {
+            XCTAssertTrue(table[name].exists, "Missing context: \(name)")
+        }
     }
     
     override func setUp() {
@@ -353,6 +355,7 @@ class KubeContextUITests: XCTestCase {
         applyButton.click()
         
         assertContexts(in: contextManagementWindow.tables.staticTexts, matchFixtureNamed: "ui-test-config-cleaned")
+        XCTAssertFalse(contextManagementWindow.tables.staticTexts["test-cluster"].exists)
     }
     
     func testImportFromMenu() {
