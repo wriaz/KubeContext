@@ -29,7 +29,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         
         if CommandLine.arguments.contains("--uitesting") {
-            prepareForTesting()
+            do {
+                try prepareForTesting()
+            } catch {
+                NSLog("Could not prepare UI test fixtures: \(error)")
+                NSApp.terminate(self)
+                return
+            }
         }
         
         k8s = Kubernetes()
@@ -75,23 +81,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
     
-    func prepareForTesting(){
+    func prepareForTesting() throws {
         NSLog ("UI Testing Mode")
         bookmarksFile = "TestBookmarks.dict"
         uiTesting = true
         let fileManager = FileManager.default
         
-        var url = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0] as URL
+        var url = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         url = url.appendingPathComponent(bookmarksFile)
         
         if fileManager.isReadableFile(atPath: url.path) {
-            try? fileManager.removeItem(at: url)
+            try fileManager.removeItem(at: url)
         }
-        let documentDirectory = try? fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
-        let tempDataUrl = documentDirectory!.appendingPathComponent("TempData")
+        let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:true)
+        let tempDataUrl = documentDirectory.appendingPathComponent("TempData", isDirectory: true)
+        try fileManager.createDirectory(at: tempDataUrl, withIntermediateDirectories: true)
         
-        testFileAsConfig = tempDataUrl.appendingPathComponent("ui-test-config.yaml")
-        testFileToImport = tempDataUrl.appendingPathComponent("file-to-import.yaml")
+        let configURL = tempDataUrl.appendingPathComponent("ui-test-config.yaml")
+        let importURL = tempDataUrl.appendingPathComponent("file-to-import.yaml")
+        testFileAsConfig = configURL
+        testFileToImport = importURL
+
+        let fixtures = [
+            ("ui-test-config", configURL),
+            ("file-to-import", importURL)
+        ]
+        for (name, destination) in fixtures {
+            guard let source = Bundle.main.url(forResource: name, withExtension: "yaml") else {
+                throw NSError(domain: "KubeContextUITests", code: 1, userInfo: [
+                    NSLocalizedDescriptionKey: "Missing bundled UI test fixture: \(name).yaml"
+                ])
+            }
+            if fileManager.fileExists(atPath: destination.path) {
+                try fileManager.removeItem(at: destination)
+            }
+            try fileManager.copyItem(at: source, to: destination)
+        }
         
         UserDefaults.standard.set(true, forKey: keyPro)
     }

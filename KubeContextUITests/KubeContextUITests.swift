@@ -11,8 +11,23 @@ import XCTest
 class KubeContextUITests: XCTestCase {
     var app: XCUIApplication!
     let fileManager = FileManager.default
-    var bundle: Bundle!
-    var bundleBeingTested: Bundle!
+
+    private var testBundle: Bundle {
+        Bundle(for: type(of: self))
+    }
+
+    private func fixtureURL(named name: String) throws -> URL {
+        try XCTUnwrap(testBundle.url(forResource: name, withExtension: "yaml"))
+    }
+
+    private func appTempDataFile(named name: String) throws -> URL {
+        let bundleIdentifier = try XCTUnwrap(app.bundleID)
+        return fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Containers", isDirectory: true)
+            .appendingPathComponent(bundleIdentifier, isDirectory: true)
+            .appendingPathComponent("Data/Documents/TempData", isDirectory: true)
+            .appendingPathComponent(name)
+    }
     
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -198,7 +213,7 @@ class KubeContextUITests: XCTestCase {
         xcuiClosewindowButton.click()
     }
     
-    func testRevertChanges() {
+    func testRevertChanges() throws {
         
         let app = XCUIApplication()
         app.statusItems.element.click()
@@ -287,7 +302,7 @@ class KubeContextUITests: XCTestCase {
         XCTAssert(!contextManagementWindow.tables.staticTexts["new-kube"].exists)
     }
     
-    func testRemoveContextWithCleanup() {
+    func testRemoveContextWithCleanup() throws {
         print("ok")
         
         let app = XCUIApplication()
@@ -304,11 +319,10 @@ class KubeContextUITests: XCTestCase {
         let applyButton = contextManagementWindow.buttons["Apply"]
         applyButton.click()
         
-        let expectedContent = try? String(contentsOfFile: "/Users/hasanturken/Workspace/turkenh/KubeContext/KubeContextTests/TestData/ui-test-config-cleaned.yaml", encoding: .utf8)
+        let expectedContent = try String(contentsOf: fixtureURL(named: "ui-test-config-cleaned"), encoding: .utf8)
+        let currentContent = try String(contentsOf: appTempDataFile(named: "ui-test-config.yaml"), encoding: .utf8)
         
-        let currentContent = try? String(contentsOfFile: "/Users/hasanturken/Library/Containers/com.ht.kubecontext/Data/Documents/TempData/ui-test-config.yaml", encoding: .utf8)
-        
-        XCTAssertEqual(expectedContent!, currentContent!)
+        XCTAssertEqual(expectedContent, currentContent)
     }
     
     func testImportFromMenu() {
@@ -454,11 +468,10 @@ class KubeContextUITests: XCTestCase {
         statusItem.click()
         menuBarsQuery/*@START_MENU_TOKEN@*/.menuItems["Select kubeconfig file"]/*[[".statusItems",".menus.menuItems[\"Select kubeconfig file\"]",".menuItems[\"Select kubeconfig file\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.click()
         
-        let origContent = try? String(contentsOfFile: "/Users/hasanturken/Workspace/turkenh/KubeContext/KubeContextTests/TestData/ui-test-config.yaml", encoding: .utf8)
+        let origContent = try String(contentsOf: fixtureURL(named: "ui-test-config"), encoding: .utf8)
+        let currentContent = try String(contentsOf: appTempDataFile(named: "ui-test-config.yaml"), encoding: .utf8)
         
-        let currentContent = try? String(contentsOfFile: "/Users/hasanturken/Library/Containers/com.ht.kubecontext/Data/Documents/TempData/ui-test-config.yaml", encoding: .utf8)
-        
-        XCTAssertEqual(origContent!, currentContent!)
+        XCTAssertEqual(origContent, currentContent)
     }
     
     func testChangeKubeconfig() {

@@ -10,6 +10,11 @@
 		8A5DB217259535A1004F6EED /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = 8A5DB216259535A1004F6EED /* Yams */; };
 		8A5DB21D259535D3004F6EED /* SwiftyStoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8A5DB21C259535D3004F6EED /* SwiftyStoreKit */; };
 		8AEB3AA02D50021F00E4DC93 /* KubeContextLoadTeleportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEB3A9F2D50021F00E4DC93 /* KubeContextLoadTeleportTests.swift */; };
+		A8741F3728A00001004BA0C2 /* ui-test-config.yaml in App Resources */ = {isa = PBXBuildFile; fileRef = A8741F3828A00001004BA0C2 /* ui-test-config.yaml */; };
+		A8741F3928A00001004BA0C2 /* ui-test-config-cleaned.yaml in UI Test Resources */ = {isa = PBXBuildFile; fileRef = A8741F3A28A00001004BA0C2 /* ui-test-config-cleaned.yaml */; };
+		A8741F3B28A00001004BA0C2 /* ui-test-config.yaml in UI Test Resources */ = {isa = PBXBuildFile; fileRef = A8741F3828A00001004BA0C2 /* ui-test-config.yaml */; };
+		A8741F3C28A00001004BA0C2 /* file-to-import.yaml in App Resources */ = {isa = PBXBuildFile; fileRef = A8741F3D28A00001004BA0C2 /* file-to-import.yaml */; };
+		A8741F3E28A00001004BA0C2 /* file-to-import.yaml in UI Test Resources */ = {isa = PBXBuildFile; fileRef = A8741F3D28A00001004BA0C2 /* file-to-import.yaml */; };
 		A1EF413726E3C811004BA0C2 /* KubeContextLoadMiniKubeContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EF413626E3C811004BA0C2 /* KubeContextLoadMiniKubeContextTests.swift */; };
 		E422CCAD216E8D0A0008D173 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = E422CCAC216E8D0A0008D173 /* Config.swift */; };
 		E439374F21791F8A0077CCF1 /* KubeContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E439374E21791F8A0077CCF1 /* KubeContextTests.swift */; };
@@ -72,6 +77,9 @@
 		E4F96DC4217B60BB004428F6 /* KubeContextUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KubeContextUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4F96DC6217B60BB004428F6 /* KubeContextUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KubeContextUITests.swift; sourceTree = "<group>"; };
 		E4F96DC8217B60BB004428F6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A8741F3828A00001004BA0C2 /* ui-test-config.yaml */ = {isa = PBXFileReference; lastKnownFileType = text; path = ui-test-config.yaml; sourceTree = "<group>"; };
+		A8741F3A28A00001004BA0C2 /* ui-test-config-cleaned.yaml */ = {isa = PBXFileReference; lastKnownFileType = text; path = ui-test-config-cleaned.yaml; sourceTree = "<group>"; };
+		A8741F3D28A00001004BA0C2 /* file-to-import.yaml */ = {isa = PBXFileReference; lastKnownFileType = text; path = file-to-import.yaml; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +136,7 @@
 		E4DE5AD72166AAD800B6959B = {
 			isa = PBXGroup;
 			children = (
+				A8741F3F28A00001004BA0C2 /* UI Test Fixtures */,
 				E4B0B22A2172857C00AB7817 /* ManageWindow */,
 				E4DE5AE22166AAD800B6959B /* KubeContext */,
 				E439374D21791F8A0077CCF1 /* KubeContextTests */,
@@ -170,6 +179,16 @@
 				E4F96DC8217B60BB004428F6 /* Info.plist */,
 			);
 			path = KubeContextUITests;
+			sourceTree = "<group>";
+		};
+		A8741F3F28A00001004BA0C2 /* UI Test Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				A8741F3828A00001004BA0C2 /* ui-test-config.yaml */,
+				A8741F3A28A00001004BA0C2 /* ui-test-config-cleaned.yaml */,
+				A8741F3D28A00001004BA0C2 /* file-to-import.yaml */,
+			);
+			path = KubeContextTests/TestData;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -220,6 +239,7 @@
 			buildPhases = (
 				E4F96DC0217B60BB004428F6 /* Sources */,
 				E4F96DC1217B60BB004428F6 /* Frameworks */,
+				A8741F4028A00001004BA0C2 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -299,9 +319,21 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A8741F3728A00001004BA0C2 /* ui-test-config.yaml in App Resources */,
+				A8741F3C28A00001004BA0C2 /* file-to-import.yaml in App Resources */,
 				E4B0B22C217285AA00AB7817 /* Manage.storyboard in Resources */,
 				E4DE5AE82166AAD900B6959B /* Assets.xcassets in Resources */,
 				E4DE5AEB2166AAD900B6959B /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A8741F4028A00001004BA0C2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A8741F3928A00001004BA0C2 /* ui-test-config-cleaned.yaml in UI Test Resources */,
+				A8741F3B28A00001004BA0C2 /* ui-test-config.yaml in UI Test Resources */,
+				A8741F3E28A00001004BA0C2 /* file-to-import.yaml in UI Test Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
