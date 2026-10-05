@@ -31,12 +31,65 @@ jobs:
           CODE_SIGNING_REQUIRED=NO
           test
 
+      - name: Extract readable XCTest results
+        if: always()
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+          result_directory="$RUNNER_TEMP/DerivedData/Logs/Test"
+          shopt -s nullglob
+          result_bundles=("$result_directory"/*.xcresult)
+          result_bundle=""
+          for candidate in "${result_bundles[@]}"; do
+            if [[ -z "$result_bundle" || "$candidate" -nt "$result_bundle" ]]; then
+              result_bundle="$candidate"
+            fi
+          done
+
+          summary_file="$RUNNER_TEMP/xctest-summary.txt"
+          tests_file="$RUNNER_TEMP/xctest-tests.txt"
+          if [[ -z "$result_bundle" ]]; then
+            echo "No .xcresult bundle found in $result_directory" | tee "$summary_file" "$tests_file"
+            exit 0
+          fi
+
+          echo "Discovered .xcresult: $result_bundle"
+          xcresulttool_help="$(xcrun xcresulttool help 2>&1 || true)"
+          summary_help="$(xcrun xcresulttool get test-results summary --help 2>&1 || true)"
+          tests_help="$(xcrun xcresulttool get test-results tests --help 2>&1 || true)"
+          printf '%s\n' "$xcresulttool_help"
+          printf '%s\n' "$summary_help"
+          printf '%s\n' "$tests_help"
+
+          if grep -q -- '--path' <<< "$summary_help" && grep -q -- '--path' <<< "$tests_help"; then
+            xcrun xcresulttool get test-results summary --path "$result_bundle" --format json > "$summary_file" 2>&1 || true
+            xcrun xcresulttool get test-results tests --path "$result_bundle" --format json > "$tests_file" 2>&1 || true
+          else
+            echo "Installed xcresulttool does not advertise the test-results summary/tests commands." | tee "$summary_file" "$tests_file"
+          fi
+
+          echo "=== XCTest summary ==="
+          cat "$summary_file"
+          echo "=== Individual XCTest results ==="
+          cat "$tests_file"
+
       - name: Upload XCTest result bundle
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: XCTest-results-${{ github.sha }}
           path: ${{ runner.temp }}/DerivedData/Logs/Test/*.xcresult
+          if-no-files-found: warn
+
+      - name: Upload readable XCTest results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xctest-readable-results
+          path: |
+            ${{ runner.temp }}/xctest-summary.txt
+            ${{ runner.temp }}/xctest-tests.txt
           if-no-files-found: warn
 
       - name: Build unsigned app
