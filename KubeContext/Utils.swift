@@ -14,6 +14,16 @@ import Yams
 var bookmarksFile = "Bookmarks.dict"
 var bookmarks = [URL: Data]()
 
+enum ContextSearch {
+    static func matchingContexts(searchText: String, in contexts: [ContextElement]) -> ([ContextElement], [Int]) {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let matches = contexts.enumerated().filter {
+            query.isEmpty || $0.element.Name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        }
+        return (matches.map { $0.element }, matches.map { $0.offset })
+    }
+}
+
 func openFolderSelection() -> URL?
 {
     let dialog = NSOpenPanel();

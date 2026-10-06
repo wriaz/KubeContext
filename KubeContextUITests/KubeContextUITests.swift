@@ -23,6 +23,30 @@ class KubeContextUITests: XCTestCase {
         return url
     }
 
+    private func fixtureCurrentContext(named name: String) -> String? {
+        guard let url = fixtureURL(named: name) else {
+            return nil
+        }
+        do {
+            let contents = try String(contentsOf: url, encoding: .utf8)
+            guard let line = contents.split(separator: "\n").first(where: { $0.hasPrefix("current-context:") }) else {
+                XCTFail("Could not find current-context in UI test fixture \(name).yaml")
+                return nil
+            }
+            return line.dropFirst("current-context:".count).trimmingCharacters(in: .whitespaces)
+        } catch {
+            XCTFail("Could not read UI test fixture \(name).yaml: \(error)")
+            return nil
+        }
+    }
+
+    private func activeContextName(from statusItem: XCUIElement) -> String {
+        statusItem.click()
+        let currentContext = statusItem.menus.menuItems["current-context-name"].label
+        statusItem.click()
+        return currentContext
+    }
+
     private func assertContexts(in table: XCUIElementQuery, matchFixtureNamed fixtureName: String) {
         guard let url = fixtureURL(named: fixtureName) else {
             return
@@ -111,26 +135,125 @@ class KubeContextUITests: XCTestCase {
     }
 
     func testChangeContext() {
-        let app = XCUIApplication()
         let statusItem = app.statusItems.element
         statusItem.click()
-        
-        let menuBarsQuery = statusItem.menus
-        let currentContextMenusQuery = menuBarsQuery.containing(.menuItem, identifier: "Current Context")
-        currentContextMenusQuery.children(matching: .menuItem)["docker-for-desktop"].click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let searchField = switchContextWindow.searchFields["switch-context-search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        searchField.click()
+        searchField.typeText("PROD")
+
+        let results = switchContextWindow.tables["switch-context-results"]
+        let productionContext = results.staticTexts["prod-cluster"]
+        XCTAssertTrue(productionContext.waitForExistence(timeout: 5))
+        XCTAssertFalse(results.staticTexts["minikube"].exists)
+        productionContext.click()
+
+        XCTAssertTrue(statusItem.label.contains("prod-cluster"), "The status item should immediately show the selected context")
         statusItem.click()
-        menuBarsQuery.menuItems["Switch Context"].click()
-        menuBarsQuery.menuItems["Switch Context"].menus.menuItems["minikube"].click()
+        XCTAssertTrue(statusItem.menus.menuItems["current-context-name"].label.contains("prod-cluster"))
+    }
+
+    func testSwitchContextSearchCanBeClearedAndShowsEmptyState() {
+        let statusItem = app.statusItems.element
         statusItem.click()
-        currentContextMenusQuery.children(matching: .menuItem)["minikube"].click()
-        
-        print("ok")
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let searchField = switchContextWindow.searchFields["switch-context-search"]
+        let results = switchContextWindow.tables["switch-context-results"]
+        XCTAssertTrue(results.staticTexts["minikube"].waitForExistence(timeout: 5))
+
+        searchField.click()
+        searchField.typeText("PROD")
+        XCTAssertTrue(results.staticTexts["prod-cluster"].waitForExistence(timeout: 5))
+        XCTAssertFalse(results.staticTexts["minikube"].exists)
+
+        searchField.clearText()
+        XCTAssertTrue(results.staticTexts["minikube"].waitForExistence(timeout: 5))
+        XCTAssertTrue(results.staticTexts["prod-cluster"].exists)
+
+        searchField.typeText("no-such-context")
+        XCTAssertTrue(switchContextWindow.staticTexts["No matching contexts"].waitForExistence(timeout: 5))
+
+        searchField.clearText()
+        XCTAssertTrue(results.staticTexts["minikube"].waitForExistence(timeout: 5))
+        switchContextWindow.buttons[XCUIIdentifierCloseWindow].click()
+    }
+
+    func testSwitchContextSearchSelectsCurrentContextInitially() {
+        guard let currentContext = fixtureCurrentContext(named: "ui-test-config") else {
+            return
+        }
+        let statusItem = app.statusItems.element
+        let currentContextBefore = statusItem.label
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let results = switchContextWindow.tables["switch-context-results"]
+        let currentContextText = results.staticTexts[currentContext]
+        XCTAssertTrue(currentContextText.waitForExistence(timeout: 5))
+        let currentContextRow = results.rows.containing(.staticText, identifier: currentContext).firstMatch
+        XCTAssertTrue(currentContextRow.exists)
+        XCTAssertTrue(currentContextRow.isSelected)
+        XCTAssertEqual(statusItem.label, currentContextBefore)
+
+        switchContextWindow.buttons[XCUIIdentifierCloseWindow].click()
+    }
+
+    func testSwitchContextKeyboardNavigationAndReturnSelectContext() {
+        let statusItem = app.statusItems.element
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let searchField = switchContextWindow.searchFields["switch-context-search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchField.hasFocus)
+
+        let results = switchContextWindow.tables["switch-context-results"]
+        let minikube = results.rows.containing(.staticText, identifier: "minikube").firstMatch
+        XCTAssertTrue(minikube.waitForExistence(timeout: 5))
+        searchField.typeKey(.downArrow, modifierFlags: [])
+        XCTAssertTrue(minikube.isSelected)
+        searchField.typeKey(.return, modifierFlags: [])
+
+        XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(activeContextName(from: statusItem), "minikube")
+        XCTAssertTrue(statusItem.label.contains("minikube"), "The status item should show the selected context")
+    }
+
+    func testSwitchContextEscapeClosesWithoutChangingContext() {
+        let statusItem = app.statusItems.element
+        let activeContext = activeContextName(from: statusItem)
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let searchField = switchContextWindow.searchFields["switch-context-search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        searchField.typeText("cluster")
+
+        let results = switchContextWindow.tables["switch-context-results"]
+        let devCluster = results.rows.containing(.staticText, identifier: "dev-cluster").firstMatch
+        XCTAssertTrue(devCluster.waitForExistence(timeout: 5))
+        searchField.typeKey(.downArrow, modifierFlags: [])
+        XCTAssertTrue(devCluster.isSelected)
+        searchField.typeKey(.escape, modifierFlags: [])
+
+        XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(activeContextName(from: statusItem), activeContext)
     }
 
     func testSearchContexts() {
         let statusItem = app.statusItems.element
+        let activeContext = activeContextName(from: statusItem)
         statusItem.click()
-        statusItem.menus.menuItems["Manage Contexts"].click()
+        let menuItems = statusItem.menus.menuItems
+        menuItems["Manage Contexts"].click()
 
         let contextManagementWindow = app.windows["Context Management"]
         let searchField = contextManagementWindow.searchFields["management-search"]
@@ -154,6 +277,10 @@ class KubeContextUITests: XCTestCase {
         XCTAssertTrue(contextManagementWindow.tables.staticTexts["prod-cluster"].exists)
         XCTAssertFalse(applyButton.isEnabled)
         XCTAssertFalse(revertButton.isEnabled)
+
+        let differentContext = activeContext == "minikube" ? "prod-cluster" : "minikube"
+        contextManagementWindow.tables.staticTexts[differentContext].click()
+        XCTAssertEqual(activeContextName(from: statusItem), activeContext, "Selecting a different managed context must not switch the active context")
 
         contextManagementWindow.buttons[XCUIIdentifierCloseWindow].click()
         XCTAssertFalse(app.alerts["There are changes that have not been applied. Would you like to apply them?"].exists)

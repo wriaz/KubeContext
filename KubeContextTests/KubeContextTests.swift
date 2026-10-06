@@ -240,3 +240,32 @@ class ManageViewControllerSearchTests: XCTestCase {
         XCTAssertEqual(controller.matchingContexts(searchText: "", in: contexts).1, [0, 1, 2])
     }
 }
+
+class ContextSearchTests: XCTestCase {
+    private let contexts = [
+        ContextElement(Context: Context(Cluster: "production-us", Extensions: nil, Namespace: nil, AuthInfo: "production-us-user"), Name: "production-us", IconColor: nil),
+        ContextElement(Context: Context(Cluster: "production-eu", Extensions: nil, Namespace: nil, AuthInfo: "production-eu-user"), Name: "production-eu", IconColor: nil),
+        ContextElement(Context: Context(Cluster: "staging", Extensions: nil, Namespace: nil, AuthInfo: "staging-user"), Name: "staging", IconColor: nil),
+        ContextElement(Context: Context(Cluster: "development", Extensions: nil, Namespace: nil, AuthInfo: "development-user"), Name: "development", IconColor: nil)
+    ]
+
+    func testSwitchContextSearchFiltersProductionContexts() {
+        let result = ContextSearch.matchingContexts(searchText: "prod", in: contexts)
+
+        XCTAssertEqual(result.0.map { $0.Name }, ["production-us", "production-eu"])
+        XCTAssertEqual(result.1, [0, 1])
+    }
+
+    func testSwitchContextSearchIsCaseInsensitive() {
+        let result = ContextSearch.matchingContexts(searchText: "PROD", in: contexts)
+
+        XCTAssertEqual(result.0.map { $0.Name }, ["production-us", "production-eu"])
+    }
+
+    func testClearingSwitchContextSearchRestoresAllContexts() {
+        let result = ContextSearch.matchingContexts(searchText: "", in: contexts)
+
+        XCTAssertEqual(result.0.map { $0.Name }, ["production-us", "production-eu", "staging", "development"])
+        XCTAssertEqual(result.1, [0, 1, 2, 3])
+    }
+}
