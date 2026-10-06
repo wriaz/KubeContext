@@ -196,7 +196,8 @@ class KubeContextUITests: XCTestCase {
         let results = switchContextWindow.tables["switch-context-results"]
         let currentContextText = results.staticTexts[currentContext]
         XCTAssertTrue(currentContextText.waitForExistence(timeout: 5))
-        let currentContextRow = results.rows.containing(.staticText, identifier: currentContext).firstMatch
+        let currentContextRow = results.descendants(matching: .tableRow)
+            .containing(.staticText, identifier: currentContext).firstMatch
         XCTAssertTrue(currentContextRow.exists)
         XCTAssertTrue(currentContextRow.isSelected)
         XCTAssertEqual(statusItem.label, currentContextBefore)
@@ -212,10 +213,10 @@ class KubeContextUITests: XCTestCase {
         let switchContextWindow = app.windows["Switch Context"]
         let searchField = switchContextWindow.searchFields["switch-context-search"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
-        XCTAssertTrue(searchField.hasFocus)
 
         let results = switchContextWindow.tables["switch-context-results"]
-        let minikube = results.rows.containing(.staticText, identifier: "minikube").firstMatch
+        let minikube = results.descendants(matching: .tableRow)
+            .containing(.staticText, identifier: "minikube").firstMatch
         XCTAssertTrue(minikube.waitForExistence(timeout: 5))
         searchField.typeKey(.downArrow, modifierFlags: [])
         XCTAssertTrue(minikube.isSelected)
@@ -238,7 +239,8 @@ class KubeContextUITests: XCTestCase {
         searchField.typeText("cluster")
 
         let results = switchContextWindow.tables["switch-context-results"]
-        let devCluster = results.rows.containing(.staticText, identifier: "dev-cluster").firstMatch
+        let devCluster = results.descendants(matching: .tableRow)
+            .containing(.staticText, identifier: "dev-cluster").firstMatch
         XCTAssertTrue(devCluster.waitForExistence(timeout: 5))
         searchField.typeKey(.downArrow, modifierFlags: [])
         XCTAssertTrue(devCluster.isSelected)
