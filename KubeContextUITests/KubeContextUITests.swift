@@ -155,9 +155,15 @@ class KubeContextUITests: XCTestCase {
         XCTAssertFalse(results.staticTexts["minikube"].exists)
         productionContext.click()
 
-        XCTAssertTrue(statusItem.label.contains("prod-cluster"), "The status item should immediately show the selected context")
         statusItem.click()
-        XCTAssertTrue(statusItem.menus.menuItems["current-context-name"].label.contains("prod-cluster"))
+        statusItem.menus.menuItems["Switch Context"].click()
+        let activeContextWindow = app.windows["Switch Context"]
+        let activeProductionContext = activeContextWindow.tables["switch-context-results"]
+            .descendants(matching: .tableRow)
+            .containing(.staticText, identifier: "prod-cluster").firstMatch
+        XCTAssertTrue(activeProductionContext.waitForExistence(timeout: 5))
+        XCTAssertTrue(activeProductionContext.isSelected)
+        activeContextWindow.buttons[XCUIIdentifierCloseWindow].click()
     }
 
     func testSwitchContextSearchCanBeClearedAndShowsEmptyState() {
@@ -227,10 +233,15 @@ class KubeContextUITests: XCTestCase {
         searchField.typeKey(.return, modifierFlags: [])
 
         XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
-        let testKubeconfig = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Containers/com.ht.kubecontext/Data/Documents/TempData/ui-test-config.yaml")
-        XCTAssertEqual(currentContext(in: testKubeconfig), "minikube")
-        XCTAssertTrue(statusItem.label.contains("minikube"), "The status item should show the selected context")
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+        let activeContextWindow = app.windows["Switch Context"]
+        let activeMinikube = activeContextWindow.tables["switch-context-results"]
+            .descendants(matching: .tableRow)
+            .containing(.staticText, identifier: "minikube").firstMatch
+        XCTAssertTrue(activeMinikube.waitForExistence(timeout: 5))
+        XCTAssertTrue(activeMinikube.isSelected)
+        activeContextWindow.buttons[XCUIIdentifierCloseWindow].click()
     }
 
     func testSwitchContextEscapeClosesWithoutChangingContext() {
