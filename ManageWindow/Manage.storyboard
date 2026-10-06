@@ -196,7 +196,7 @@
                                 </connections>
                             </button>
                             <scrollView fixedFrame="YES" borderType="line" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5hd-zB-9Mp">
-                                <rect key="frame" x="20" y="85" width="193" height="261"/>
+                                <rect key="frame" x="20" y="85" width="193" height="232"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <clipView key="contentView" ambiguous="YES" drawsBackground="NO" id="IUc-Nu-nMc">
                                     <rect key="frame" x="1" y="1" width="191" height="259"/>
@@ -268,7 +268,7 @@
                                 </connections>
                             </button>
                             <searchField identifier="management-search" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M3S-earch-001">
-                                <rect key="frame" x="20" y="375" width="120" height="22"/>
+                                <rect key="frame" x="20" y="325" width="193" height="22"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <searchFieldCell key="cell" scrollable="YES" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" placeholderString="Search Contexts" id="M3S-earch-002">
                                     <font key="font" metaFont="system"/>
