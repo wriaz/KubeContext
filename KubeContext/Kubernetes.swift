@@ -95,8 +95,9 @@ class Kubernetes {
         }
         backupKubeconfig()
         if !uiTesting || configFile != testFileAsConfig {
-            storeFolderInBookmark(url: configFile!)
-            saveBookmarksData()
+            if storeFolderInBookmark(url: configFile!) {
+                saveBookmarksData()
+            }
         }
     }
     

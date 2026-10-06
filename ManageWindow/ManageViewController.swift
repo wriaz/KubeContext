@@ -761,7 +761,7 @@ This will enable you to upgrade to the full version and use all features and fun
 
 extension ManageViewController: NSTextFieldDelegate {
     func controlTextDidChange(_ notification: Notification) {
-        if let _ = notification.object as? NSTextField {
+        if let textField = notification.object as? NSTextField, !(textField is NSSearchField) {
             applyButton.isEnabled = true
             revertButton.isEnabled = true
             //do what you need here

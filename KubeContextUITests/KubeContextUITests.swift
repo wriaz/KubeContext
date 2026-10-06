@@ -135,17 +135,28 @@ class KubeContextUITests: XCTestCase {
         let contextManagementWindow = app.windows["Context Management"]
         let searchField = contextManagementWindow.searchFields["management-search"]
         XCTAssertTrue(searchField.exists)
+        let applyButton = contextManagementWindow.buttons["Apply"]
+        let revertButton = contextManagementWindow.buttons["Revert"]
+        XCTAssertFalse(applyButton.isEnabled)
+        XCTAssertFalse(revertButton.isEnabled)
 
         searchField.click()
         searchField.typeText("MINIKUBE")
 
         XCTAssertTrue(contextManagementWindow.tables.staticTexts["minikube"].exists)
         XCTAssertFalse(contextManagementWindow.tables.staticTexts["prod-cluster"].exists)
+        XCTAssertFalse(applyButton.isEnabled)
+        XCTAssertFalse(revertButton.isEnabled)
 
         searchField.clearText()
 
         XCTAssertTrue(contextManagementWindow.tables.staticTexts["minikube"].exists)
         XCTAssertTrue(contextManagementWindow.tables.staticTexts["prod-cluster"].exists)
+        XCTAssertFalse(applyButton.isEnabled)
+        XCTAssertFalse(revertButton.isEnabled)
+
+        contextManagementWindow.buttons[XCUIIdentifierCloseWindow].click()
+        XCTAssertFalse(app.alerts["There are changes that have not been applied. Would you like to apply them?"].exists)
     }
     
     func testRenameContext() {
@@ -167,6 +178,9 @@ class KubeContextUITests: XCTestCase {
         textField.typeText("docker-of-kubernetes")
         
         let applyButton = contextManagementWindow.buttons["Apply"]
+        let revertButton = contextManagementWindow.buttons["Revert"]
+        XCTAssertTrue(applyButton.isEnabled)
+        XCTAssertTrue(revertButton.isEnabled)
         applyButton.click()
         
         let xcuiClosewindowButton = contextManagementWindow.buttons[XCUIIdentifierCloseWindow]

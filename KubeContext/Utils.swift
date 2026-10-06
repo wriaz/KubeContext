@@ -83,17 +83,19 @@ func saveBookmarksData()
     NSKeyedArchiver.archiveRootObject(bookmarks, toFile: path)
 }
 
-func storeFolderInBookmark(url: URL)
+func storeFolderInBookmark(url: URL) -> Bool
 {
     do
     {
         let data = try url.bookmarkData(options: NSURL.BookmarkCreationOptions.withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
         bookmarks.removeAll()
         bookmarks[url] = data
+        return true
     }
     catch
     {
         NSLog ("Error storing bookmarks \(error)")
+        return false
     }
     
 }
