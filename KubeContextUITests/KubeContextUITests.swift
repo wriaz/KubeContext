@@ -27,15 +27,19 @@ class KubeContextUITests: XCTestCase {
         guard let url = fixtureURL(named: name) else {
             return nil
         }
+        return currentContext(in: url)
+    }
+
+    private func currentContext(in kubeconfigURL: URL) -> String? {
         do {
-            let contents = try String(contentsOf: url, encoding: .utf8)
+            let contents = try String(contentsOf: kubeconfigURL, encoding: .utf8)
             guard let line = contents.split(separator: "\n").first(where: { $0.hasPrefix("current-context:") }) else {
-                XCTFail("Could not find current-context in UI test fixture \(name).yaml")
+                XCTFail("Could not find current-context in kubeconfig at \(kubeconfigURL.path)")
                 return nil
             }
             return line.dropFirst("current-context:".count).trimmingCharacters(in: .whitespaces)
         } catch {
-            XCTFail("Could not read UI test fixture \(name).yaml: \(error)")
+            XCTFail("Could not read kubeconfig at \(kubeconfigURL.path): \(error)")
             return nil
         }
     }
@@ -96,7 +100,7 @@ class KubeContextUITests: XCTestCase {
 
         // UI tests must launch the application that they test. Doing this in setup will make sure it happens for each test method.
         app = XCUIApplication()
-        app.launchArguments.append("--uitesting")
+        app.launchArguments.append(contentsOf: ["-show-context-name", "YES", "--uitesting"])
         
         app.launch()
         app.activate()
@@ -223,7 +227,8 @@ class KubeContextUITests: XCTestCase {
         searchField.typeKey(.return, modifierFlags: [])
 
         XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
-        XCTAssertEqual(activeContextName(from: statusItem), "minikube")
+        let testKubeconfig = app.containerURL.appendingPathComponent("Documents/TempData/ui-test-config.yaml")
+        XCTAssertEqual(currentContext(in: testKubeconfig), "minikube")
         XCTAssertTrue(statusItem.label.contains("minikube"), "The status item should show the selected context")
     }
 
