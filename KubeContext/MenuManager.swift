@@ -187,6 +187,8 @@ class MenuManager: NSObject, NSMenuDelegate {
         private let currentContext: String?
         private let onSelect: (String) -> Bool
         private var matchingContexts: [ContextElement] = []
+        private var localOutsideClickMonitor: Any?
+        private var globalOutsideClickMonitor: Any?
 
         private let searchField = NSSearchField()
         private let tableView = ContextSearchTableView()
@@ -275,12 +277,50 @@ class MenuManager: NSObject, NSMenuDelegate {
 
         func showPopup(near anchorView: NSView?) {
             positionWindow(near: anchorView)
+            installOutsideClickMonitors()
             window?.makeKeyAndOrderFront(nil)
             window?.makeFirstResponder(searchField)
         }
 
-        func windowDidResignKey(_ notification: Notification) {
-            window?.close()
+        func windowWillClose(_ notification: Notification) {
+            removeOutsideClickMonitors()
+        }
+
+        private func installOutsideClickMonitors() {
+            guard localOutsideClickMonitor == nil, globalOutsideClickMonitor == nil else {
+                return
+            }
+
+            let mouseDownEvents: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+            localOutsideClickMonitor = NSEvent.addLocalMonitorForEvents(matching: mouseDownEvents) { [weak self] event in
+                let location = event.window?.convertPoint(toScreen: event.locationInWindow) ?? NSEvent.mouseLocation
+                self?.closeIfClickIsOutside(at: location)
+                return event
+            }
+            globalOutsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: mouseDownEvents) { [weak self] _ in
+                let location = NSEvent.mouseLocation
+                DispatchQueue.main.async {
+                    self?.closeIfClickIsOutside(at: location)
+                }
+            }
+        }
+
+        private func removeOutsideClickMonitors() {
+            if let monitor = localOutsideClickMonitor {
+                NSEvent.removeMonitor(monitor)
+                localOutsideClickMonitor = nil
+            }
+            if let monitor = globalOutsideClickMonitor {
+                NSEvent.removeMonitor(monitor)
+                globalOutsideClickMonitor = nil
+            }
+        }
+
+        private func closeIfClickIsOutside(at location: NSPoint) {
+            guard let window = window, !window.frame.contains(location) else {
+                return
+            }
+            window.close()
         }
 
         private func positionWindow(near anchorView: NSView?) {

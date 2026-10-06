@@ -187,6 +187,8 @@ class KubeContextUITests: XCTestCase {
 
         searchField.typeText("no-such-context")
         XCTAssertTrue(switchContextWindow.staticTexts["No matching contexts"].waitForExistence(timeout: 5))
+        results.click()
+        XCTAssertTrue(searchField.isHittable, "Interacting with the results area should keep the popup open")
 
         searchField.clearText()
         XCTAssertTrue(results.staticTexts["minikube"].waitForExistence(timeout: 5))
