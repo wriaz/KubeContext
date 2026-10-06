@@ -268,7 +268,7 @@
                                 </connections>
                             </button>
                             <searchField identifier="management-search" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M3S-earch-001">
-                                <rect key="frame" x="20" y="354" width="120" height="22"/>
+                                <rect key="frame" x="20" y="375" width="120" height="22"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <searchFieldCell key="cell" scrollable="YES" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" placeholderString="Search Contexts" id="M3S-earch-002">
                                     <font key="font" metaFont="system"/>
@@ -298,7 +298,7 @@
                                 </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mP2-3g-VsN">
-                                <rect key="frame" x="39" y="361" width="102" height="17"/>
+                                <rect key="frame" x="39" y="358" width="102" height="17"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Kubeconfig File:" id="xIz-ym-NEs">
                                     <font key="font" usesAppearanceFont="YES"/>

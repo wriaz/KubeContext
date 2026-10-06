@@ -39,6 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         
         k8s = Kubernetes()
+        k8s.contextChanged()
         
         // For testing
         //UserDefaults.standard.set(false, forKey: keyPro)

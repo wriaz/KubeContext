@@ -28,6 +28,9 @@ private let contextReleaseCallback: @convention(c) (UnsafeRawPointer?) -> Void =
 }
 
 private func updateContextStatusBar() {
+    guard statusBarButton != nil else {
+        return
+    }
     statusBarButton.imagePosition = NSControl.ImagePosition.imageLeft
     if k8s.kubeconfig != nil {
         do {
@@ -62,6 +65,7 @@ class Kubernetes {
     var watcher: FSEventStreamRef?
 
     init() {
+        UserDefaults.standard.register(defaults: [keyShowContextOnMenu: true])
         shouldShowContextName = UserDefaults.standard.bool(forKey: keyShowContextOnMenu)
         let f = loadBookmarks()
         if f == nil {
@@ -99,6 +103,7 @@ class Kubernetes {
                 saveBookmarksData()
             }
         }
+        contextChanged()
     }
     
     func initWatcher(){
