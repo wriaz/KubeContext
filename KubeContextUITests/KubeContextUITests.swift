@@ -293,6 +293,14 @@ class KubeContextUITests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct results.
         let app = XCUIApplication()
         let statusItem = app.statusItems.element
+        func selectContext(_ name: String) {
+            statusItem.click()
+            statusItem.menus.menuItems["Switch Context"].click()
+            let switchContextWindow = app.windows["Switch Context"]
+            let searchField = switchContextWindow.searchFields["switch-context-search"]
+            searchField.typeText(name)
+            switchContextWindow.tables["switch-context-results"].staticTexts[name].click()
+        }
         
         statusItem.click()
         let menuBarsQuery = statusItem.menus
@@ -314,9 +322,7 @@ class KubeContextUITests: XCTestCase {
         
         let xcuiClosewindowButton = contextManagementWindow.buttons[XCUIIdentifierCloseWindow]
         xcuiClosewindowButton.click()
-        statusItem.click()
-        let currentContextMenusQuery = menuBarsQuery.containing(.menuItem, identifier: "Current Context")
-        currentContextMenusQuery.children(matching: .menuItem)["docker-of-kubernetes"].click()
+        selectContext("docker-of-kubernetes")
         statusItem.click()
         manageContextsMenuItem.click()
         contextManagementWindow.tables.staticTexts["prod-cluster"].click()
@@ -325,9 +331,7 @@ class KubeContextUITests: XCTestCase {
         textField.typeText("my-kube")
         applyButton.click()
         xcuiClosewindowButton.click()
-        statusItem.click()
-        menuBarsQuery.menuItems["Switch Context"].click()
-        menuBarsQuery.menuItems["Switch Context"].menus.menuItems["my-kube"].click()
+        selectContext("my-kube")
         
         statusItem.click()
         manageContextsMenuItem.click()
@@ -338,8 +342,7 @@ class KubeContextUITests: XCTestCase {
         applyButton.click()
         xcuiClosewindowButton.click()
         
-        statusItem.click()
-        currentContextMenusQuery.children(matching: .menuItem)["prod-cluster"].click()
+        selectContext("prod-cluster")
     }
     
     func testChangeContextDetails() {

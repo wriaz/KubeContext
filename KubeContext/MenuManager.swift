@@ -214,7 +214,6 @@ class MenuManager: NSObject, NSMenuDelegate {
             guard let contentView = window?.contentView else {
                 return
             }
-            contentView.translatesAutoresizingMaskIntoConstraints = false
 
             searchField.identifier = NSUserInterfaceItemIdentifier("switch-context-search")
             searchField.placeholderString = "Search Contexts"
