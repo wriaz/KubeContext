@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - ci-test-artifact
   pull_request:
 
 jobs:
@@ -103,6 +104,19 @@ jobs:
           CODE_SIGNING_ALLOWED=NO
           CODE_SIGNING_REQUIRED=NO
           build
+
+      - name: Package macOS test artifact
+        run: |
+          app_path="$RUNNER_TEMP/DerivedData/Build/Products/Debug/KubeContext.app"
+          zip_path="$RUNNER_TEMP/KubeContext-macos-test.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_path"
+
+      - name: Upload macOS test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KubeContext-macos-test
+          path: ${{ runner.temp }}/KubeContext-macos-test.zip
+          if-no-files-found: error
 
       - name: Upload app
         uses: actions/upload-artifact@v4
