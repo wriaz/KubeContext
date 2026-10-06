@@ -227,7 +227,8 @@ class KubeContextUITests: XCTestCase {
         searchField.typeKey(.return, modifierFlags: [])
 
         XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
-        let testKubeconfig = app.containerURL.appendingPathComponent("Documents/TempData/ui-test-config.yaml")
+        let testKubeconfig = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Containers/com.ht.kubecontext/Data/Documents/TempData/ui-test-config.yaml")
         XCTAssertEqual(currentContext(in: testKubeconfig), "minikube")
         XCTAssertTrue(statusItem.label.contains("minikube"), "The status item should show the selected context")
     }
