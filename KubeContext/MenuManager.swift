@@ -179,7 +179,7 @@ class MenuManager: NSObject, NSMenuDelegate {
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
 
-    final class ContextSearchWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate, NSTextFieldDelegate {
+    final class ContextSearchWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate {
         private let allContexts: [ContextElement]
         private let currentContext: String?
         private let onSelect: (String) -> Bool
