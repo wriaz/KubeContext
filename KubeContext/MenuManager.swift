@@ -178,11 +178,6 @@ class MenuManager: NSObject, NSMenuDelegate {
     }
 
     final class ContextSearchWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate, NSWindowDelegate {
-        private final class SearchPanel: NSPanel {
-            override var canBecomeKey: Bool { true }
-            override var canBecomeMain: Bool { false }
-        }
-
         private let allContexts: [ContextElement]
         private let currentContext: String?
         private let onSelect: (String) -> Bool
@@ -199,16 +194,14 @@ class MenuManager: NSObject, NSMenuDelegate {
             self.allContexts = contexts
             self.currentContext = currentContext
             self.onSelect = onSelect
-            let window = SearchPanel(
+            let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 420, height: 340),
-                styleMask: [.borderless, .nonactivatingPanel],
+                styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false
             )
             window.title = "Switch Context"
             window.minSize = NSSize(width: 320, height: 240)
-            window.level = .popUpMenu
-            window.hidesOnDeactivate = true
             window.hasShadow = true
             super.init(window: window)
             window.delegate = self
