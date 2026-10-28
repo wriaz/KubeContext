@@ -163,7 +163,7 @@ class KubeContextUITests: XCTestCase {
             .containing(.staticText, identifier: "prod-cluster").firstMatch
         XCTAssertTrue(activeProductionContext.waitForExistence(timeout: 5))
         XCTAssertTrue(activeProductionContext.isSelected)
-        activeContextWindow.buttons[XCUIIdentifierCloseWindow].click()
+        activeContextWindow.searchFields["switch-context-search"].typeKey(.escape, modifierFlags: [])
     }
 
     func testSwitchContextSearchCanBeClearedAndShowsEmptyState() {
@@ -187,10 +187,13 @@ class KubeContextUITests: XCTestCase {
 
         searchField.typeText("no-such-context")
         XCTAssertTrue(switchContextWindow.staticTexts["No matching contexts"].waitForExistence(timeout: 5))
+        results.click()
+        XCTAssertTrue(searchField.isHittable, "Interacting with the results area should keep the popup open")
 
+        searchField.click()
         searchField.clearText()
         XCTAssertTrue(results.staticTexts["minikube"].waitForExistence(timeout: 5))
-        switchContextWindow.buttons[XCUIIdentifierCloseWindow].click()
+        searchField.typeKey(.escape, modifierFlags: [])
     }
 
     func testSwitchContextSearchSelectsCurrentContextInitially() {
@@ -212,7 +215,7 @@ class KubeContextUITests: XCTestCase {
         XCTAssertTrue(currentContextRow.isSelected)
         XCTAssertEqual(statusItem.label, currentContextBefore)
 
-        switchContextWindow.buttons[XCUIIdentifierCloseWindow].click()
+        switchContextWindow.searchFields["switch-context-search"].typeKey(.escape, modifierFlags: [])
     }
 
     func testSwitchContextKeyboardNavigationAndReturnSelectContext() {
@@ -241,7 +244,7 @@ class KubeContextUITests: XCTestCase {
             .containing(.staticText, identifier: "minikube").firstMatch
         XCTAssertTrue(activeMinikube.waitForExistence(timeout: 5))
         XCTAssertTrue(activeMinikube.isSelected)
-        activeContextWindow.buttons[XCUIIdentifierCloseWindow].click()
+        activeContextWindow.searchFields["switch-context-search"].typeKey(.escape, modifierFlags: [])
     }
 
     func testSwitchContextEscapeClosesWithoutChangingContext() {
@@ -265,6 +268,37 @@ class KubeContextUITests: XCTestCase {
 
         XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
         XCTAssertEqual(activeContextName(from: statusItem), activeContext)
+    }
+
+    func testSwitchContextPopupClosesWhenClickingOutside() {
+        let statusItem = app.statusItems.element
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        XCTAssertTrue(switchContextWindow.searchFields["switch-context-search"].waitForExistence(timeout: 5))
+
+        statusItem.click()
+        XCTAssertTrue(switchContextWindow.waitForNonExistence(timeout: 5))
+        statusItem.click()
+    }
+
+    func testSwitchContextPopupAppearsBesideStatusItem() {
+        let statusItem = app.statusItems.element
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let searchField = switchContextWindow.searchFields["switch-context-search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+
+        let statusItemFrame = statusItem.frame
+        let windowFrame = switchContextWindow.frame
+        XCTAssertTrue(
+            windowFrame.maxX <= statusItemFrame.minX || windowFrame.minX >= statusItemFrame.maxX,
+            "The Switch Context window should be positioned beside the status item."
+        )
+        searchField.typeKey(.escape, modifierFlags: [])
     }
 
     func testSearchContexts() {
