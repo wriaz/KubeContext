@@ -283,6 +283,24 @@ class KubeContextUITests: XCTestCase {
         statusItem.click()
     }
 
+    func testSwitchContextPopupAppearsBesideStatusItem() {
+        let statusItem = app.statusItems.element
+        statusItem.click()
+        statusItem.menus.menuItems["Switch Context"].click()
+
+        let switchContextWindow = app.windows["Switch Context"]
+        let searchField = switchContextWindow.searchFields["switch-context-search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+
+        let statusItemFrame = statusItem.frame
+        let windowFrame = switchContextWindow.frame
+        XCTAssertTrue(
+            windowFrame.maxX <= statusItemFrame.minX || windowFrame.minX >= statusItemFrame.maxX,
+            "The Switch Context window should be positioned beside the status item."
+        )
+        searchField.typeKey(.escape, modifierFlags: [])
+    }
+
     func testSearchContexts() {
         let statusItem = app.statusItems.element
         let activeContext = activeContextName(from: statusItem)

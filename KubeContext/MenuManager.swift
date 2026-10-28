@@ -12,6 +12,7 @@ import Cocoa
 class MenuManager: NSObject, NSMenuDelegate {
     var manageController: NSWindowController?
     var contextSearchController: ContextSearchWindowController?
+    private var menuConfigForOpenMenu: Config?
     
     override init() {
         super.init()
@@ -31,32 +32,30 @@ class MenuManager: NSObject, NSMenuDelegate {
     }
 
     @objc func openContextSearch(_ sender: NSMenuItem) {
-        do {
-            guard let config = try k8s.getConfig() else {
-                alertUserWithWarning(message: "Could not load contexts from the selected kubeconfig.")
-                return
-            }
-            let controller = ContextSearchWindowController(
-                contexts: config.Contexts,
-                currentContext: config.CurrentContext
-            ) { [weak self] name in
-                guard let self = self else {
-                    return false
-                }
-                do {
-                    try self.switchContext(name: name)
-                    return true
-                } catch {
-                    self.alertUserWithWarning(message: "Could not switch context: \(error)")
-                    return false
-                }
-            }
-            contextSearchController = controller
-            NSApp.activate(ignoringOtherApps: true)
-            controller.showPopup(near: statusBarButton)
-        } catch {
-            alertUserWithWarning(message: "Could not load contexts from the selected kubeconfig: \(error)")
+        guard let config = menuConfigForOpenMenu else {
+            alertUserWithWarning(message: "Could not load contexts from the selected kubeconfig.")
+            return
         }
+        let controller = ContextSearchWindowController(
+            contexts: config.Contexts,
+            currentContext: config.CurrentContext
+        ) { [weak self] name in
+            guard let self = self else {
+                return false
+            }
+            do {
+                try self.switchContext(name: name)
+                return true
+            } catch {
+                self.alertUserWithWarning(message: "Could not switch context: \(error)")
+                return false
+            }
+        }
+        contextSearchController = controller
+        if !NSApp.isActive {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        controller.showPopup(near: statusBarButton)
     }
     
     @objc func logClick(_ sender: NSMenuItem) {
@@ -111,6 +110,7 @@ class MenuManager: NSObject, NSMenuDelegate {
     }
     
     func ConstructInitMenu(menu: NSMenu){
+        menuConfigForOpenMenu = nil
         menu.removeAllItems()
         let selectConfigMenuItem = NSMenuItem(title: "Select kubeconfig file", action:  #selector(selectKubeconfig(_:)), keyEquivalent: "c")
         selectConfigMenuItem.target = self
@@ -121,6 +121,7 @@ class MenuManager: NSObject, NSMenuDelegate {
     }
     
     func ConstructMainMenu(menu: NSMenu){
+        menuConfigForOpenMenu = nil
         menu.removeAllItems()
         let centerParagraphStyle = NSMutableParagraphStyle.init()
         centerParagraphStyle.alignment = .center
@@ -140,6 +141,7 @@ class MenuManager: NSObject, NSMenuDelegate {
             alertUserWithWarning(message: "Could not parse config file \n \(error)")
             return
         }
+        menuConfigForOpenMenu = config
         
         
         let ctxs = config.Contexts
@@ -271,6 +273,7 @@ class MenuManager: NSObject, NSMenuDelegate {
         func showPopup(near anchorView: NSView?) {
             positionWindow(near: anchorView)
             installOutsideClickMonitors()
+            window?.initialFirstResponder = searchField
             window?.makeKeyAndOrderFront(nil)
             window?.makeFirstResponder(searchField)
         }
@@ -320,20 +323,50 @@ class MenuManager: NSObject, NSMenuDelegate {
             guard let window = window else {
                 return
             }
-            guard let anchorView = anchorView,
-                  let anchorWindow = anchorView.window,
-                  let screen = anchorWindow.screen ?? NSScreen.main else {
-                window.center()
+            guard let screen = anchorView?.window?.screen ?? NSScreen.main else {
                 return
             }
 
-            let anchorRect = anchorWindow.convertToScreen(anchorView.convert(anchorView.bounds, to: nil))
             let visibleFrame = screen.visibleFrame
-            let popupFrame = window.frame
-            let maxX = max(visibleFrame.minX, visibleFrame.maxX - popupFrame.width)
-            let x = min(max(anchorRect.midX - popupFrame.width / 2, visibleFrame.minX), maxX)
-            let y = max(visibleFrame.minY, anchorRect.minY - popupFrame.height)
-            window.setFrameOrigin(NSPoint(x: x, y: y))
+            let currentFrame = window.frame
+            let anchorRect: NSRect?
+            if let anchorView = anchorView, let anchorWindow = anchorView.window {
+                anchorRect = anchorWindow.convertToScreen(anchorView.convert(anchorView.bounds, to: nil))
+            } else {
+                anchorRect = nil
+            }
+
+            let horizontalGap: CGFloat = 8
+            let leftSpace = anchorRect.map { max(0, $0.minX - visibleFrame.minX - horizontalGap) } ?? 0
+            let rightSpace = anchorRect.map { max(0, visibleFrame.maxX - $0.maxX - horizontalGap) } ?? 0
+            let placeOnRight = rightSpace >= leftSpace
+            let availableWidth = anchorRect == nil ? visibleFrame.width : max(leftSpace, rightSpace)
+            let popupSize = NSSize(
+                width: min(min(currentFrame.width, visibleFrame.width), availableWidth),
+                height: min(currentFrame.height, visibleFrame.height)
+            )
+            window.minSize = NSSize(
+                width: min(window.minSize.width, popupSize.width),
+                height: min(window.minSize.height, popupSize.height)
+            )
+
+            let origin: NSPoint
+            if let anchorRect = anchorRect {
+                let x = placeOnRight
+                    ? anchorRect.maxX + horizontalGap
+                    : anchorRect.minX - horizontalGap - popupSize.width
+                let y = min(
+                    max(anchorRect.minY - popupSize.height, visibleFrame.minY),
+                    visibleFrame.maxY - popupSize.height
+                )
+                origin = NSPoint(x: x, y: y)
+            } else {
+                origin = NSPoint(
+                    x: visibleFrame.midX - popupSize.width / 2,
+                    y: visibleFrame.midY - popupSize.height / 2
+                )
+            }
+            window.setFrame(NSRect(origin: origin, size: popupSize), display: false)
         }
 
         @objc private func searchFieldChanged(_ sender: NSSearchField) {
