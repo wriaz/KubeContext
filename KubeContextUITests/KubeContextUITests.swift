@@ -190,6 +190,7 @@ class KubeContextUITests: XCTestCase {
         results.click()
         XCTAssertTrue(searchField.isHittable, "Interacting with the results area should keep the popup open")
 
+        searchField.click()
         searchField.clearText()
         XCTAssertTrue(results.staticTexts["minikube"].waitForExistence(timeout: 5))
         searchField.typeKey(.escape, modifierFlags: [])
